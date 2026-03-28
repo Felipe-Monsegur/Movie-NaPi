@@ -1,48 +1,60 @@
 # Movie-NaPi
 
-App web para compartir una lista de películas por ver, puntuar (1–10), dejar opiniones y ver el panel con las notas de cada uno y el promedio.
+App web para compartir una **lista de películas por ver**, **puntuar** (1–10), **opinar** y ver un **panel** con la nota de cada persona y el **promedio**.
 
-**Stack:** React, TypeScript, Vite, Tailwind, Firebase (Auth + Firestore).
+**Stack:** React 18, TypeScript, Vite, Tailwind CSS, Firebase (Authentication + Firestore + Hosting opcional).
 
-## Desarrollo local
+---
+
+## Documentación en el repo
+
+| Archivo | Contenido |
+|--------|-----------|
+| [INICIO_RAPIDO.md](./INICIO_RAPIDO.md) | Instalar, Firebase, primera ejecución |
+| [PUBLICAR.md](./PUBLICAR.md) | Build, Hosting, actualizar la app online |
+| [AGREGAR_USUARIOS.md](./AGREGAR_USUARIOS.md) | Lista blanca `allowedUsers` |
+| [COMO_FUNCIONA.md](./COMO_FUNCIONA.md) | Pantallas, datos en Firestore, flujo |
+
+---
+
+## Inicio mínimo
 
 ```bash
 npm install
-```
-
-Copiá la configuración de Firebase:
-
-```bash
 copy src\config\firebase.example.ts src\config\firebase.ts
 ```
 
-Editá `src/config/firebase.ts` con los datos de tu proyecto (Console → Configuración del proyecto → app web).
+Editá `src/config/firebase.ts` con la config de tu app web en Firebase Console.
 
 ```bash
 npm run dev
 ```
 
-Abre `http://localhost:5173`.
+Abrí `http://localhost:5173` o ejecutá `local.bat` (Windows).
 
-En Windows también podés usar `local.bat`.
+**Firebase:** Auth (email/contraseña), Firestore, publicar reglas desde `firestore.rules`. Colección **`allowedUsers`** con el UID de cada quien (ver [AGREGAR_USUARIOS.md](./AGREGAR_USUARIOS.md)).
 
-## Firebase
+**Proyecto Firebase de referencia:** `movie-napi` (podés usar otro; actualizá `firebase.ts` y `firebase use`).
 
-1. Authentication: correo y contraseña activado.  
-2. Firestore creado; publicá las reglas de `firestore.rules`.  
-3. Colección **`allowedUsers`**: un documento por usuario con **ID = UID** (Authentication) o campo **`email`** en minúsculas.
+---
 
-## Publicar (Hosting)
-
-Requiere [Firebase CLI](https://firebase.google.com/docs/cli) y `firebase login`. El archivo `.firebaserc` no va al repo (está en `.gitignore`); en cada máquina: `firebase use movie-napi` o creá `.firebaserc` con tu `projectId`.
+## Publicar en internet
 
 ```bash
 npm run build
 firebase deploy --only hosting,firestore:rules
 ```
 
-O ejecutá `publicar.bat`.
+O `publicar.bat`. Detalle en [PUBLICAR.md](./PUBLICAR.md).
 
-## Licencia
+---
+
+## Repositorio
+
+https://github.com/Felipe-Monsegur/Movie-NaPi
+
+`firebase.ts` y `.firebaserc` no se versionan (`.gitignore`); cada entorno copia `firebase.example.ts` y configura el CLI.
+
+---
 
 Uso personal / privado.
