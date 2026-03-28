@@ -40,7 +40,7 @@ export default function Layout({ children }: LayoutProps) {
               <span className="text-2xl sm:text-3xl" aria-hidden>
                 🎬
               </span>
-              {headerTitle.trim() || 'Movie NaPi'}
+              {headerTitle.trim() || '🍿 Movie NaPi'}
             </h1>
             <div className="flex items-center gap-2 sm:gap-3">
               <button

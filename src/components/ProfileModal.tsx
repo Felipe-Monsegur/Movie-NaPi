@@ -313,7 +313,7 @@ export default function ProfileModal({ isOpen, onClose }: ProfileModalProps) {
             value={titleInput}
             onChange={(e) => setTitleInput(e.target.value)}
             className={`w-full px-2 py-1.5 rounded-lg text-xs sm:text-sm ${theme === 'dark' ? 'bg-gray-700 text-white border-gray-600' : 'bg-white text-gray-900 border-gray-300'} border focus:outline-none focus-ring-header`}
-            placeholder="Movie NaPi"
+            placeholder="🍿 Movie NaPi"
             maxLength={50}
           />
           <p className={`text-xs mt-0.5 ${theme === 'dark' ? 'text-gray-400' : 'text-gray-500'}`}>

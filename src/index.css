@@ -23,6 +23,19 @@
   cursor: not-allowed;
 }
 
+/* Icono editar en panel: mismo acento que el header */
+.btn-panel-edit {
+  color: var(--header-color);
+  transition: background-color 0.15s ease;
+}
+.btn-panel-edit:hover:not(:disabled) {
+  background-color: color-mix(in srgb, var(--header-color) 22%, transparent);
+}
+.btn-panel-edit:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 2px var(--header-color);
+}
+
 input.focus-ring-header:focus,
 textarea.focus-ring-header:focus,
 select.focus-ring-header:focus {

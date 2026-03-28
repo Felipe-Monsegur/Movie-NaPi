@@ -257,11 +257,7 @@ export default function ScoresPanel() {
                       aria-label="Editar título"
                       title="Editar título"
                       onClick={() => setEditTarget(movie)}
-                      className={`p-2 rounded-lg transition-colors outline-none focus-visible:ring-2 focus-visible:ring-offset-2 ${
-                        theme === 'dark'
-                          ? 'text-sky-400 hover:bg-sky-500/15 focus-visible:ring-sky-400 focus-visible:ring-offset-gray-900'
-                          : 'text-sky-600 hover:bg-sky-500/15 focus-visible:ring-sky-500 focus-visible:ring-offset-white'
-                      }`}
+                      className="btn-panel-edit p-2 rounded-lg outline-none"
                     >
                       <IconEditOutline />
                     </button>

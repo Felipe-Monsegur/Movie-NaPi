@@ -30,7 +30,7 @@ const ThemeContext = createContext<ThemeContextType>({
   theme: 'dark',
   toggleTheme: () => {},
   headerColor: '#5b21b6',
-  headerTitle: 'Movie NaPi',
+  headerTitle: '🍿 Movie NaPi',
   loginBgColor: '#5b21b6',
   headerColorDark: '#5b21b6',
   headerColorLight: '#7c3aed',
@@ -60,7 +60,7 @@ export const ThemeProvider = ({ children }: { children: ReactNode }) => {
   const [loading, setLoading] = useState(!!user); // Solo loading si hay usuario
   const [headerColorDark, setHeaderColorDark] = useState<string>('#5b21b6');
   const [headerColorLight, setHeaderColorLight] = useState<string>('#7c3aed');
-  const [headerTitle, setHeaderTitle] = useState<string>('Movie NaPi');
+  const [headerTitle, setHeaderTitle] = useState<string>('🍿 Movie NaPi');
   const [displayName, setDisplayName] = useState<string>('');
   const [listAccentColor, setListAccentColor] = useState<string>(DEFAULT_LIST_ACCENT);
 
@@ -69,6 +69,11 @@ export const ThemeProvider = ({ children }: { children: ReactNode }) => {
   
   // Colores según el tema
   const loginBgColor = theme === 'dark' ? '#5b21b6' : '#7c3aed';
+
+  useEffect(() => {
+    const t = headerTitle.trim();
+    document.title = t || '🍿 Movie NaPi';
+  }, [headerTitle]);
 
   // Cargar tema y preferencias del usuario al iniciar sesión
   useEffect(() => {

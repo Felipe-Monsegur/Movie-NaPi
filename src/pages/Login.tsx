@@ -35,7 +35,7 @@ export default function Login() {
     <div className="min-h-screen flex items-center justify-center" style={{ backgroundColor: loginBgColor }}>
       <div className={`${theme === 'dark' ? 'bg-gray-800' : 'bg-white'} rounded-lg shadow-xl p-6 sm:p-8 w-full max-w-md mx-4 ${theme === 'dark' ? 'border border-gray-700' : 'border border-gray-300'}`}>
         <div className="flex items-center justify-between mb-6">
-          <h1 className={`text-3xl font-bold ${theme === 'dark' ? 'text-white' : 'text-gray-800'}`}>🎬 Movie NaPi</h1>
+          <h1 className={`text-3xl font-bold ${theme === 'dark' ? 'text-white' : 'text-gray-800'}`}>🍿 Movie NaPi</h1>
           <button
             onClick={toggleTheme}
             className={`px-4 py-2 rounded-full flex items-center space-x-2 text-xs transition-colors ${
