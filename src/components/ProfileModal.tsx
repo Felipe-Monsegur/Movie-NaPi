@@ -10,10 +10,22 @@ interface ProfileModalProps {
 
 export default function ProfileModal({ isOpen, onClose }: ProfileModalProps) {
   const { user } = useAuth();
-  const { theme, toggleTheme, headerColorDark, headerColorLight, headerTitle, updateHeaderColorDark, updateHeaderColorLight, updateHeaderTitle } = useTheme();
+  const {
+    theme,
+    toggleTheme,
+    headerColorDark,
+    headerColorLight,
+    headerTitle,
+    displayName,
+    updateHeaderColorDark,
+    updateHeaderColorLight,
+    updateHeaderTitle,
+    updateDisplayName,
+  } = useTheme();
   const [colorDarkInput, setColorDarkInput] = useState(headerColorDark);
   const [colorLightInput, setColorLightInput] = useState(headerColorLight);
   const [titleInput, setTitleInput] = useState(headerTitle);
+  const [displayNameInput, setDisplayNameInput] = useState(displayName);
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
@@ -21,8 +33,9 @@ export default function ProfileModal({ isOpen, onClose }: ProfileModalProps) {
       setColorDarkInput(headerColorDark);
       setColorLightInput(headerColorLight);
       setTitleInput(headerTitle);
+      setDisplayNameInput(displayName);
     }
-  }, [isOpen, headerColorDark, headerColorLight, headerTitle]);
+  }, [isOpen, headerColorDark, headerColorLight, headerTitle, displayName]);
 
   const handleSave = async () => {
     setSaving(true);
@@ -30,6 +43,7 @@ export default function ProfileModal({ isOpen, onClose }: ProfileModalProps) {
       await updateHeaderColorDark(colorDarkInput);
       await updateHeaderColorLight(colorLightInput);
       await updateHeaderTitle(titleInput);
+      await updateDisplayName(displayNameInput);
       onClose();
     } catch (error) {
       console.error('Error al guardar preferencias:', error);
@@ -60,6 +74,25 @@ export default function ProfileModal({ isOpen, onClose }: ProfileModalProps) {
           <div className={`px-2 py-1.5 rounded-lg text-xs sm:text-sm ${theme === 'dark' ? 'bg-gray-700 text-gray-300' : 'bg-gray-100 text-gray-700'}`}>
             {user?.email || 'No disponible'}
           </div>
+        </div>
+
+        {/* Nombre en la lista */}
+        <div>
+          <label className={`block text-xs font-medium mb-1 ${theme === 'dark' ? 'text-gray-300' : 'text-gray-700'}`}>
+            Tu nombre en la lista
+          </label>
+          <input
+            type="text"
+            value={displayNameInput}
+            onChange={(e) => setDisplayNameInput(e.target.value)}
+            className={`w-full px-2 py-1.5 rounded-lg text-xs sm:text-sm ${theme === 'dark' ? 'bg-gray-700 text-white border-gray-600' : 'bg-white text-gray-900 border-gray-300'} border focus:outline-none focus:ring-2 focus:ring-blue-500`}
+            placeholder="Ej. Felipe o Naky"
+            maxLength={40}
+            autoComplete="nickname"
+          />
+          <p className={`text-xs mt-0.5 ${theme === 'dark' ? 'text-gray-400' : 'text-gray-500'}`}>
+            Así se muestra al añadir películas (no se usa el email).
+          </p>
         </div>
 
         {/* Color del Header - Modo Oscuro */}

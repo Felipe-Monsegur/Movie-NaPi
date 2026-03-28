@@ -78,6 +78,7 @@ function movieFromDoc(
     year: typeof data.year === 'number' ? data.year : null,
     createdByUid: String(data.createdByUid || ''),
     createdByEmail: String(data.createdByEmail || ''),
+    createdByName: String(data.createdByName || '').trim(),
     createdAt: createdAt?.toDate?.().toISOString() || '',
   };
 }
@@ -89,13 +90,14 @@ export const getMovies = async (): Promise<Movie[]> => {
 };
 
 export const addMovie = async (
-  movie: Pick<Movie, 'title' | 'year' | 'createdByUid' | 'createdByEmail'>
+  movie: Pick<Movie, 'title' | 'year' | 'createdByUid' | 'createdByEmail' | 'createdByName'>
 ): Promise<string> => {
   const docRef = await addDoc(collection(db, 'movies'), {
     title: movie.title.trim(),
     year: movie.year,
     createdByUid: movie.createdByUid,
     createdByEmail: movie.createdByEmail,
+    createdByName: movie.createdByName.trim(),
     createdAt: Timestamp.now(),
   });
   return docRef.id;
@@ -122,6 +124,7 @@ function ratingFromDoc(id: string, data: Record<string, unknown>): MovieRating {
     movieId: String(data.movieId || ''),
     userId: String(data.userId || ''),
     userEmail: String(data.userEmail || ''),
+    userDisplayName: String(data.userDisplayName || '').trim(),
     score: Number(data.score) || 0,
     opinion: String(data.opinion || ''),
     updatedAt: updatedAt?.toDate?.().toISOString() || '',
@@ -139,6 +142,7 @@ export const upsertRating = async (params: {
   movieId: string;
   userId: string;
   userEmail: string;
+  userDisplayName: string;
   score: number;
   opinion: string;
 }): Promise<void> => {
@@ -149,6 +153,7 @@ export const upsertRating = async (params: {
       movieId: params.movieId,
       userId: params.userId,
       userEmail: params.userEmail.toLowerCase(),
+      userDisplayName: params.userDisplayName.trim(),
       score: params.score,
       opinion: params.opinion.trim(),
       updatedAt: Timestamp.now(),
@@ -157,9 +162,37 @@ export const upsertRating = async (params: {
   );
 };
 
+/** Nombres en lista desde userSettings (para panel con valoraciones viejas sin userDisplayName) */
+export const getDisplayNamesForUserIds = async (
+  userIds: string[]
+): Promise<Record<string, string>> => {
+  const unique = [...new Set(userIds.filter(Boolean))];
+  const out: Record<string, string> = {};
+  await Promise.all(
+    unique.map(async (uid) => {
+      const s = await getUserSettings(uid);
+      const n = s?.displayName?.trim();
+      if (n) out[uid] = n;
+    })
+  );
+  return out;
+};
+
 export const getAllRatings = async (): Promise<MovieRating[]> => {
   const snapshot = await getDocs(collection(db, 'movieRatings'));
   return snapshot.docs.map((d) => ratingFromDoc(d.id, d.data()));
+};
+
+/** IDs de películas que este usuario ya puntuó (sigue en Firestore; solo filtra “Por ver”) */
+export const getRatedMovieIdsForUser = async (userId: string): Promise<Set<string>> => {
+  const q = query(collection(db, 'movieRatings'), where('userId', '==', userId));
+  const snap = await getDocs(q);
+  const ids = new Set<string>();
+  snap.docs.forEach((d) => {
+    const mid = d.data().movieId;
+    if (mid != null) ids.add(String(mid));
+  });
+  return ids;
 };
 
 // ============ CONFIGURACIÓN DE USUARIO ============
@@ -168,6 +201,8 @@ export interface UserSettings {
   headerColorDark?: string;
   headerColorLight?: string;
   headerTitle?: string;
+  /** Cómo mostrarte al añadir películas (ej. Felipe, Naky) */
+  displayName?: string;
 }
 
 export const getUserTheme = async (userId: string): Promise<'dark' | 'light' | null> => {
@@ -201,6 +236,10 @@ export const getUserSettings = async (userId: string): Promise<UserSettings | nu
       headerColorDark: data.headerColorDark || null,
       headerColorLight: data.headerColorLight || null,
       headerTitle: data.headerTitle || null,
+      displayName:
+        data.displayName != null && String(data.displayName).trim()
+          ? String(data.displayName).trim()
+          : undefined,
     };
   } catch (error) {
     console.error('Error al obtener configuraciones del usuario:', error);

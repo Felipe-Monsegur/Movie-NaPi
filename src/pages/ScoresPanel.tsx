@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useTheme } from '../context/ThemeContext';
 import { useToast } from '../context/ToastContext';
-import { getMovies, getAllRatings } from '../services/firebaseService';
+import { getMovies, getAllRatings, getDisplayNamesForUserIds } from '../services/firebaseService';
 import { Movie, MovieRating } from '../types';
 
 function average(nums: number[]): number | null {
@@ -10,11 +10,16 @@ function average(nums: number[]): number | null {
   return Math.round((s / nums.length) * 10) / 10;
 }
 
+function raterLabel(r: MovieRating, nameByUid: Record<string, string>): string {
+  return r.userDisplayName.trim() || nameByUid[r.userId]?.trim() || 'Sin nombre';
+}
+
 export default function ScoresPanel() {
   const { theme } = useTheme();
   const { showToast } = useToast();
   const [movies, setMovies] = useState<Movie[]>([]);
   const [ratings, setRatings] = useState<MovieRating[]>([]);
+  const [nameByUid, setNameByUid] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -22,8 +27,11 @@ export default function ScoresPanel() {
       setLoading(true);
       try {
         const [m, r] = await Promise.all([getMovies(), getAllRatings()]);
+        const uids = [...new Set(r.map((x) => x.userId).filter(Boolean))];
+        const names = await getDisplayNamesForUserIds(uids);
         setMovies(m);
         setRatings(r);
+        setNameByUid(names);
       } catch {
         showToast('No se pudo cargar el panel', 'error');
       } finally {
@@ -35,10 +43,10 @@ export default function ScoresPanel() {
 
   const byMovie = useMemo(() => {
     const map = new Map<string, MovieRating[]>();
-    for (const r of ratings) {
-      const list = map.get(r.movieId) || [];
-      list.push(r);
-      map.set(r.movieId, list);
+    for (const row of ratings) {
+      const list = map.get(row.movieId) || [];
+      list.push(row);
+      map.set(row.movieId, list);
     }
     return map;
   }, [ratings]);
@@ -72,7 +80,7 @@ export default function ScoresPanel() {
           Panel de puntuaciones
         </h2>
         <p className={`mt-1 text-sm ${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}`}>
-          Nota de cada uno, opinión y promedio por película.
+          Nota de cada uno, opinión y promedio por película. En la columna «Quién» se usa el nombre de perfil (Felipe, Naky…), no el email.
         </p>
       </div>
 
@@ -130,7 +138,11 @@ export default function ScoresPanel() {
                     <tbody>
                       {list
                         .slice()
-                        .sort((a, b) => a.userEmail.localeCompare(b.userEmail))
+                        .sort((a, b) =>
+                          raterLabel(a, nameByUid).localeCompare(raterLabel(b, nameByUid), 'es', {
+                            sensitivity: 'base',
+                          })
+                        )
                         .map((r) => (
                           <tr
                             key={r.id}
@@ -138,7 +150,9 @@ export default function ScoresPanel() {
                               theme === 'dark' ? 'border-gray-700' : 'border-gray-100'
                             }`}
                           >
-                            <td className={`px-4 py-3 align-top ${td}`}>{r.userEmail || r.userId}</td>
+                            <td className={`px-4 py-3 align-top font-medium ${td}`}>
+                              {raterLabel(r, nameByUid)}
+                            </td>
                             <td className={`px-4 py-3 align-top font-semibold tabular-nums ${td}`}>{r.score}</td>
                             <td className={`px-4 py-3 align-top whitespace-pre-wrap ${td}`}>
                               {r.opinion || (

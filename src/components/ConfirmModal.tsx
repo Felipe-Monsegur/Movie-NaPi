@@ -1,10 +1,10 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useTheme } from '../context/ThemeContext';
 
 interface ConfirmModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onConfirm: () => void;
+  onConfirm: () => void | Promise<void>;
   title: string;
   message: string;
   confirmText?: string;
@@ -18,11 +18,12 @@ export default function ConfirmModal({
   onConfirm,
   title,
   message,
-  confirmText = 'Aceptar',
+  confirmText = 'Confirmar',
   cancelText = 'Cancelar',
   type = 'danger',
 }: ConfirmModalProps) {
-  const { theme } = useTheme();
+  const { theme, headerColor } = useTheme();
+  const [pending, setPending] = useState(false);
 
   useEffect(() => {
     if (isOpen) {
@@ -35,28 +36,34 @@ export default function ConfirmModal({
     };
   }, [isOpen]);
 
+  useEffect(() => {
+    if (!isOpen) setPending(false);
+  }, [isOpen]);
+
   if (!isOpen) return null;
 
-  const handleConfirm = () => {
-    onConfirm();
-    onClose();
+  const handleConfirm = async () => {
+    setPending(true);
+    try {
+      await Promise.resolve(onConfirm());
+    } finally {
+      setPending(false);
+      onClose();
+    }
   };
 
   const typeStyles = {
     danger: {
-      confirmBg: theme === 'dark' ? 'bg-red-600 hover:bg-red-700' : 'bg-red-500 hover:bg-red-600',
-      icon: '⚠️',
-      iconColor: 'text-red-500',
+      confirmBg: theme === 'dark' ? 'bg-rose-600 hover:bg-rose-500' : 'bg-rose-600 hover:bg-rose-700',
+      ring: 'ring-rose-500/30',
     },
     warning: {
-      confirmBg: theme === 'dark' ? 'bg-yellow-600 hover:bg-yellow-700' : 'bg-yellow-500 hover:bg-yellow-600',
-      icon: '⚠️',
-      iconColor: 'text-yellow-500',
+      confirmBg: theme === 'dark' ? 'bg-amber-600 hover:bg-amber-500' : 'bg-amber-600 hover:bg-amber-700',
+      ring: 'ring-amber-500/30',
     },
     info: {
-      confirmBg: theme === 'dark' ? 'bg-blue-600 hover:bg-blue-700' : 'bg-blue-500 hover:bg-blue-600',
-      icon: 'ℹ️',
-      iconColor: 'text-blue-500',
+      confirmBg: theme === 'dark' ? 'bg-violet-600 hover:bg-violet-500' : 'bg-violet-600 hover:bg-violet-700',
+      ring: 'ring-violet-500/30',
     },
   };
 
@@ -64,44 +71,70 @@ export default function ConfirmModal({
 
   return (
     <div
-      className="fixed inset-0 z-[60] flex items-center justify-center bg-black bg-opacity-70"
-      onClick={onClose}
+      className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-slate-950/75 backdrop-blur-sm"
+      onClick={pending ? undefined : onClose}
+      role="presentation"
     >
       <div
-        className={`${theme === 'dark' ? 'bg-gray-800' : 'bg-white'} rounded-xl shadow-2xl max-w-md w-full mx-4 overflow-hidden`}
+        className={`relative w-full max-w-[420px] rounded-2xl shadow-2xl overflow-hidden transition-transform ${
+          theme === 'dark' ? 'bg-gray-900 ring-1 ring-white/10' : 'bg-white ring-1 ring-gray-200'
+        }`}
         onClick={(e) => e.stopPropagation()}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="confirm-modal-title"
+        aria-describedby="confirm-modal-desc"
       >
+        <div className="h-1.5 w-full" style={{ backgroundColor: headerColor }} />
+
         <div className="p-6 sm:p-8">
-          <div className="flex items-start gap-4 mb-6">
-            <div className={`text-4xl flex-shrink-0 ${styles.iconColor}`}>
-              {styles.icon}
-            </div>
-            <div className="flex-1">
-              <h3 className={`text-xl sm:text-2xl font-bold mb-2 ${theme === 'dark' ? 'text-white' : 'text-gray-800'}`}>
-                {title}
-              </h3>
-              <p className={`text-sm sm:text-base ${theme === 'dark' ? 'text-gray-300' : 'text-gray-600'}`}>
-                {message}
-              </p>
-            </div>
+          <div
+            className={`mx-auto mb-5 flex h-14 w-14 items-center justify-center rounded-2xl ${styles.ring} ring-8 ${
+              theme === 'dark' ? 'bg-gray-800' : 'bg-violet-50'
+            }`}
+          >
+            <span className="text-3xl" aria-hidden>
+              🎬
+            </span>
           </div>
 
-          <div className="flex gap-3 sm:gap-4 justify-end">
+          <h3
+            id="confirm-modal-title"
+            className={`text-center text-xl font-bold tracking-tight sm:text-2xl ${
+              theme === 'dark' ? 'text-white' : 'text-gray-900'
+            }`}
+          >
+            {title}
+          </h3>
+          <p
+            id="confirm-modal-desc"
+            className={`mt-3 text-center text-sm leading-relaxed sm:text-base ${
+              theme === 'dark' ? 'text-gray-400' : 'text-gray-600'
+            }`}
+          >
+            {message}
+          </p>
+
+          <div className="mt-8 flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
             <button
+              type="button"
               onClick={onClose}
-              className={`px-4 sm:px-6 py-2 sm:py-2.5 rounded-lg transition-colors font-medium ${
+              disabled={pending}
+              className={`w-full rounded-xl px-5 py-3 text-sm font-semibold transition-colors sm:w-auto ${
                 theme === 'dark'
-                  ? 'bg-gray-700 text-white hover:bg-gray-600'
-                  : 'bg-gray-200 text-gray-800 hover:bg-gray-300'
+                  ? 'bg-gray-800 text-gray-200 hover:bg-gray-700 disabled:opacity-50'
+                  : 'bg-gray-100 text-gray-800 hover:bg-gray-200 disabled:opacity-50'
               }`}
             >
               {cancelText}
             </button>
             <button
+              type="button"
               onClick={handleConfirm}
-              className={`px-4 sm:px-6 py-2 sm:py-2.5 rounded-lg transition-colors font-medium text-white ${styles.confirmBg}`}
+              disabled={pending}
+              className={`w-full rounded-xl px-5 py-3 text-sm font-semibold text-white shadow-lg transition-colors sm:w-auto ${styles.confirmBg} disabled:opacity-60 disabled:cursor-not-allowed`}
             >
-              {confirmText}
+              {pending ? 'Un momento…' : confirmText}
             </button>
           </div>
         </div>
@@ -109,4 +142,3 @@ export default function ConfirmModal({
     </div>
   );
 }
-

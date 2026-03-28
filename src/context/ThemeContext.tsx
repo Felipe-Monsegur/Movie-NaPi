@@ -12,9 +12,12 @@ interface ThemeContextType {
   loginBgColor: string;
   headerColorDark: string;
   headerColorLight: string;
+  /** Nombre en la lista de películas (ej. Felipe, Naky) */
+  displayName: string;
   updateHeaderColorDark: (color: string) => Promise<void>;
   updateHeaderColorLight: (color: string) => Promise<void>;
   updateHeaderTitle: (title: string) => Promise<void>;
+  updateDisplayName: (name: string) => Promise<void>;
 }
 
 const ThemeContext = createContext<ThemeContextType>({
@@ -28,6 +31,8 @@ const ThemeContext = createContext<ThemeContextType>({
   updateHeaderColorDark: async () => {},
   updateHeaderColorLight: async () => {},
   updateHeaderTitle: async () => {},
+  displayName: '',
+  updateDisplayName: async () => {},
 });
 
 export const useTheme = () => useContext(ThemeContext);
@@ -48,6 +53,7 @@ export const ThemeProvider = ({ children }: { children: ReactNode }) => {
   const [headerColorDark, setHeaderColorDark] = useState<string>('#5b21b6');
   const [headerColorLight, setHeaderColorLight] = useState<string>('#7c3aed');
   const [headerTitle, setHeaderTitle] = useState<string>('Movie NaPi');
+  const [displayName, setDisplayName] = useState<string>('');
 
   // Color del header según el tema actual (calculado dinámicamente)
   const headerColor = theme === 'dark' ? headerColorDark : headerColorLight;
@@ -89,6 +95,11 @@ export const ThemeProvider = ({ children }: { children: ReactNode }) => {
             if (settings.headerTitle) {
               setHeaderTitle(settings.headerTitle);
             }
+            if (settings.displayName) {
+              setDisplayName(settings.displayName);
+            } else {
+              setDisplayName('');
+            }
           }
         } catch (error) {
           console.error('Error al cargar configuraciones:', error);
@@ -100,7 +111,7 @@ export const ThemeProvider = ({ children }: { children: ReactNode }) => {
         }
         setLoading(false);
       } else {
-        // Si no hay usuario, cargar de localStorage
+        setDisplayName('');
         const savedTheme = localStorage.getItem('theme') as Theme | null;
         if (savedTheme === 'dark' || savedTheme === 'light') {
           setTheme(savedTheme);
@@ -181,6 +192,18 @@ export const ThemeProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
+  const updateDisplayName = async (name: string) => {
+    const trimmed = name.trim();
+    setDisplayName(trimmed);
+    if (user) {
+      try {
+        await saveUserSettings(user.uid, { displayName: trimmed });
+      } catch (error) {
+        console.error('Error al guardar nombre en lista:', error);
+      }
+    }
+  };
+
   // Aplicar tema al body
   useEffect(() => {
     if (theme === 'light') {
@@ -205,9 +228,11 @@ export const ThemeProvider = ({ children }: { children: ReactNode }) => {
       loginBgColor,
       headerColorDark,
       headerColorLight,
+      displayName,
       updateHeaderColorDark,
       updateHeaderColorLight,
       updateHeaderTitle,
+      updateDisplayName,
     }}>
       {children}
     </ThemeContext.Provider>
