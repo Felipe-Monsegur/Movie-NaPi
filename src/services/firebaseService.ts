@@ -10,6 +10,7 @@ import {
   orderBy,
   setDoc,
   Timestamp,
+  updateDoc,
   writeBatch,
 } from 'firebase/firestore';
 import { db } from '../config/firebase';
@@ -67,6 +68,14 @@ export const removeAllowedUser = async (userIdOrEmail: string): Promise<void> =>
 };
 
 // ============ PELÍCULAS (COMPARTIDAS) ============
+const FALLBACK_LIST_ACCENT = '#9ca3af';
+
+function parseListAccentColor(raw: unknown): string {
+  const s = String(raw ?? '').trim();
+  if (/^#[0-9A-Fa-f]{6}$/.test(s)) return s;
+  return FALLBACK_LIST_ACCENT;
+}
+
 function movieFromDoc(
   id: string,
   data: Record<string, unknown>
@@ -79,6 +88,7 @@ function movieFromDoc(
     createdByUid: String(data.createdByUid || ''),
     createdByEmail: String(data.createdByEmail || ''),
     createdByName: String(data.createdByName || '').trim(),
+    listAccentColor: parseListAccentColor(data.listAccentColor),
     createdAt: createdAt?.toDate?.().toISOString() || '',
   };
 }
@@ -90,27 +100,31 @@ export const getMovies = async (): Promise<Movie[]> => {
 };
 
 export const addMovie = async (
-  movie: Pick<Movie, 'title' | 'year' | 'createdByUid' | 'createdByEmail' | 'createdByName'>
+  movie: Pick<
+    Movie,
+    'title' | 'year' | 'createdByUid' | 'createdByEmail' | 'createdByName' | 'listAccentColor'
+  >
 ): Promise<string> => {
+  const accent = parseListAccentColor(movie.listAccentColor);
   const docRef = await addDoc(collection(db, 'movies'), {
     title: movie.title.trim(),
     year: movie.year,
     createdByUid: movie.createdByUid,
     createdByEmail: movie.createdByEmail,
     createdByName: movie.createdByName.trim(),
+    listAccentColor: accent,
     createdAt: Timestamp.now(),
   });
   return docRef.id;
 };
 
-export const deleteMovie = async (movieId: string): Promise<void> => {
-  const ratingsQ = query(collection(db, 'movieRatings'), where('movieId', '==', movieId));
-  const ratingsSnap = await getDocs(ratingsQ);
-  const batch = writeBatch(db);
-  ratingsSnap.docs.forEach((d) => batch.delete(d.ref));
-  batch.delete(doc(db, 'movies', movieId));
-  await batch.commit();
+export const updateMovieTitle = async (movieId: string, title: string): Promise<void> => {
+  const t = title.trim();
+  if (!t) throw new Error('El título no puede estar vacío');
+  await updateDoc(doc(db, 'movies', movieId), { title: t });
 };
+
+const BATCH_DELETE_MAX = 450;
 
 // ============ VALORACIONES ============
 function ratingDocId(movieId: string, userId: string): string {
@@ -147,6 +161,7 @@ export const upsertRating = async (params: {
   opinion: string;
 }): Promise<void> => {
   const id = ratingDocId(params.movieId, params.userId);
+  const score = Math.max(1, Math.min(10, Math.round(Number(params.score) * 2) / 2));
   await setDoc(
     doc(db, 'movieRatings', id),
     {
@@ -154,7 +169,7 @@ export const upsertRating = async (params: {
       userId: params.userId,
       userEmail: params.userEmail.toLowerCase(),
       userDisplayName: params.userDisplayName.trim(),
-      score: params.score,
+      score,
       opinion: params.opinion.trim(),
       updatedAt: Timestamp.now(),
     },
@@ -183,7 +198,7 @@ export const getAllRatings = async (): Promise<MovieRating[]> => {
   return snapshot.docs.map((d) => ratingFromDoc(d.id, d.data()));
 };
 
-/** IDs de películas que este usuario ya puntuó (sigue en Firestore; solo filtra “Por ver”) */
+/** IDs de títulos que este usuario ya puntuó (sigue en Firestore; solo filtra “Por ver”) */
 export const getRatedMovieIdsForUser = async (userId: string): Promise<Set<string>> => {
   const q = query(collection(db, 'movieRatings'), where('userId', '==', userId));
   const snap = await getDocs(q);
@@ -195,14 +210,28 @@ export const getRatedMovieIdsForUser = async (userId: string): Promise<Set<strin
   return ids;
 };
 
+export const deleteMovie = async (movieId: string): Promise<void> => {
+  const ratingsQ = query(collection(db, 'movieRatings'), where('movieId', '==', movieId));
+  const ratingsSnap = await getDocs(ratingsQ);
+  const refs = ratingsSnap.docs.map((d) => d.ref);
+  for (let i = 0; i < refs.length; i += BATCH_DELETE_MAX) {
+    const batch = writeBatch(db);
+    refs.slice(i, i + BATCH_DELETE_MAX).forEach((r) => batch.delete(r));
+    await batch.commit();
+  }
+  await deleteDoc(doc(db, 'movies', movieId));
+};
+
 // ============ CONFIGURACIÓN DE USUARIO ============
 export interface UserSettings {
   theme?: 'dark' | 'light';
   headerColorDark?: string;
   headerColorLight?: string;
   headerTitle?: string;
-  /** Cómo mostrarte al añadir películas (ej. Felipe, Naky) */
+  /** Cómo mostrarte al añadir en Por ver (ej. Felipe, Naky) */
   displayName?: string;
+  /** Barrita de color en tarjetas de Por ver (#RRGGBB) */
+  listAccentColor?: string;
 }
 
 export const getUserTheme = async (userId: string): Promise<'dark' | 'light' | null> => {
@@ -239,6 +268,10 @@ export const getUserSettings = async (userId: string): Promise<UserSettings | nu
       displayName:
         data.displayName != null && String(data.displayName).trim()
           ? String(data.displayName).trim()
+          : undefined,
+      listAccentColor:
+        data.listAccentColor != null && /^#[0-9A-Fa-f]{6}$/.test(String(data.listAccentColor).trim())
+          ? String(data.listAccentColor).trim()
           : undefined,
     };
   } catch (error) {

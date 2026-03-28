@@ -24,12 +24,9 @@ export default function NotAuthorized() {
             Por favor, contacta al administrador para solicitar acceso.
           </p>
           <button
+            type="button"
             onClick={handleLogout}
-            className={`w-full py-2 px-4 rounded font-medium transition-colors ${
-              theme === 'dark'
-                ? 'bg-red-600 text-white hover:bg-red-700'
-                : 'bg-red-500 text-white hover:bg-red-600'
-            }`}
+            className="w-full py-2 px-4 rounded font-medium btn-header-primary"
           >
             Cerrar Sesión
           </button>

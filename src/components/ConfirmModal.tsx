@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useTheme } from '../context/ThemeContext';
+import { hexToRgba } from '../utils/color';
 
 interface ConfirmModalProps {
   isOpen: boolean;
@@ -20,7 +21,7 @@ export default function ConfirmModal({
   message,
   confirmText = 'Confirmar',
   cancelText = 'Cancelar',
-  type = 'danger',
+  type: _type = 'danger',
 }: ConfirmModalProps) {
   const { theme, headerColor } = useTheme();
   const [pending, setPending] = useState(false);
@@ -52,23 +53,6 @@ export default function ConfirmModal({
     }
   };
 
-  const typeStyles = {
-    danger: {
-      confirmBg: theme === 'dark' ? 'bg-rose-600 hover:bg-rose-500' : 'bg-rose-600 hover:bg-rose-700',
-      ring: 'ring-rose-500/30',
-    },
-    warning: {
-      confirmBg: theme === 'dark' ? 'bg-amber-600 hover:bg-amber-500' : 'bg-amber-600 hover:bg-amber-700',
-      ring: 'ring-amber-500/30',
-    },
-    info: {
-      confirmBg: theme === 'dark' ? 'bg-violet-600 hover:bg-violet-500' : 'bg-violet-600 hover:bg-violet-700',
-      ring: 'ring-violet-500/30',
-    },
-  };
-
-  const styles = typeStyles[type];
-
   return (
     <div
       className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-slate-950/75 backdrop-blur-sm"
@@ -89,9 +73,11 @@ export default function ConfirmModal({
 
         <div className="p-6 sm:p-8">
           <div
-            className={`mx-auto mb-5 flex h-14 w-14 items-center justify-center rounded-2xl ${styles.ring} ring-8 ${
-              theme === 'dark' ? 'bg-gray-800' : 'bg-violet-50'
-            }`}
+            className="mx-auto mb-5 flex h-14 w-14 items-center justify-center rounded-2xl"
+            style={{
+              backgroundColor: hexToRgba(headerColor, theme === 'dark' ? 0.15 : 0.12),
+              boxShadow: `0 0 0 8px ${hexToRgba(headerColor, 0.2)}`,
+            }}
           >
             <span className="text-3xl" aria-hidden>
               🎬
@@ -132,7 +118,7 @@ export default function ConfirmModal({
               type="button"
               onClick={handleConfirm}
               disabled={pending}
-              className={`w-full rounded-xl px-5 py-3 text-sm font-semibold text-white shadow-lg transition-colors sm:w-auto ${styles.confirmBg} disabled:opacity-60 disabled:cursor-not-allowed`}
+              className="w-full rounded-xl px-5 py-3 text-sm font-semibold shadow-lg sm:w-auto btn-header-primary"
             >
               {pending ? 'Un momento…' : confirmText}
             </button>

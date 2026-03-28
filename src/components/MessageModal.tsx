@@ -1,4 +1,5 @@
 import { createPortal } from 'react-dom';
+import { useTheme } from '../context/ThemeContext';
 
 interface MessageModalProps {
   isOpen: boolean;
@@ -9,6 +10,8 @@ interface MessageModalProps {
 }
 
 export default function MessageModal({ isOpen, onClose, title, message, type = 'info' }: MessageModalProps) {
+  const { headerColor } = useTheme();
+
   if (!isOpen) return null;
 
   const typeStyles = {
@@ -23,8 +26,8 @@ export default function MessageModal({ isOpen, onClose, title, message, type = '
       icon: '✕',
     },
     info: {
-      bg: 'bg-blue-600',
-      border: 'border-blue-500',
+      bg: '',
+      border: '',
       icon: 'ℹ',
     },
     warning: {
@@ -35,6 +38,7 @@ export default function MessageModal({ isOpen, onClose, title, message, type = '
   };
 
   const style = typeStyles[type];
+  const isInfo = type === 'info';
 
   return createPortal(
     <div
@@ -42,7 +46,12 @@ export default function MessageModal({ isOpen, onClose, title, message, type = '
       onClick={onClose}
     >
       <div
-        className={`${style.bg} ${style.border} border-l-4 rounded-lg shadow-xl max-w-2xl w-full mx-2 sm:mx-4 max-h-[80vh] overflow-y-auto`}
+        className={`${!isInfo ? `${style.bg} ${style.border} ` : ''}border-l-4 rounded-lg shadow-xl max-w-2xl w-full mx-2 sm:mx-4 max-h-[80vh] overflow-y-auto`}
+        style={
+          isInfo
+            ? { backgroundColor: headerColor, borderLeftColor: headerColor }
+            : undefined
+        }
         onClick={(e) => e.stopPropagation()}
       >
         <div className="p-4 sm:p-6">
@@ -61,8 +70,9 @@ export default function MessageModal({ isOpen, onClose, title, message, type = '
           </div>
           <div className="mt-3 sm:mt-4 flex justify-end">
             <button
+              type="button"
               onClick={onClose}
-              className="bg-white/20 hover:bg-white/30 text-white px-4 sm:px-6 py-1.5 sm:py-2 rounded-lg transition-colors text-sm sm:text-base"
+              className="px-4 sm:px-6 py-1.5 sm:py-2 rounded-lg text-sm sm:text-base font-medium btn-header-primary"
             >
               Aceptar
             </button>

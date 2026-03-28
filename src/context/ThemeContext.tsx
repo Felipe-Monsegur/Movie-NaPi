@@ -4,6 +4,9 @@ import { saveUserTheme, getUserSettings, saveUserSettings } from '../services/fi
 
 type Theme = 'dark' | 'light';
 
+/** Color por defecto de la barrita en “Por ver” (amarillo tipo tarjeta) */
+export const DEFAULT_LIST_ACCENT = '#eab308';
+
 interface ThemeContextType {
   theme: Theme;
   toggleTheme: () => void;
@@ -12,12 +15,15 @@ interface ThemeContextType {
   loginBgColor: string;
   headerColorDark: string;
   headerColorLight: string;
-  /** Nombre en la lista de películas (ej. Felipe, Naky) */
+  /** Nombre en la lista Por ver (ej. Felipe, Naky) */
   displayName: string;
+  /** Color de la barrita al añadir títulos en Por ver (película o serie) */
+  listAccentColor: string;
   updateHeaderColorDark: (color: string) => Promise<void>;
   updateHeaderColorLight: (color: string) => Promise<void>;
   updateHeaderTitle: (title: string) => Promise<void>;
   updateDisplayName: (name: string) => Promise<void>;
+  updateListAccentColor: (color: string) => Promise<void>;
 }
 
 const ThemeContext = createContext<ThemeContextType>({
@@ -32,7 +38,9 @@ const ThemeContext = createContext<ThemeContextType>({
   updateHeaderColorLight: async () => {},
   updateHeaderTitle: async () => {},
   displayName: '',
+  listAccentColor: DEFAULT_LIST_ACCENT,
   updateDisplayName: async () => {},
+  updateListAccentColor: async () => {},
 });
 
 export const useTheme = () => useContext(ThemeContext);
@@ -54,6 +62,7 @@ export const ThemeProvider = ({ children }: { children: ReactNode }) => {
   const [headerColorLight, setHeaderColorLight] = useState<string>('#7c3aed');
   const [headerTitle, setHeaderTitle] = useState<string>('Movie NaPi');
   const [displayName, setDisplayName] = useState<string>('');
+  const [listAccentColor, setListAccentColor] = useState<string>(DEFAULT_LIST_ACCENT);
 
   // Color del header según el tema actual (calculado dinámicamente)
   const headerColor = theme === 'dark' ? headerColorDark : headerColorLight;
@@ -100,6 +109,14 @@ export const ThemeProvider = ({ children }: { children: ReactNode }) => {
             } else {
               setDisplayName('');
             }
+            if (
+              settings.listAccentColor &&
+              /^#[0-9A-Fa-f]{6}$/.test(settings.listAccentColor.trim())
+            ) {
+              setListAccentColor(settings.listAccentColor.trim());
+            } else {
+              setListAccentColor(DEFAULT_LIST_ACCENT);
+            }
           }
         } catch (error) {
           console.error('Error al cargar configuraciones:', error);
@@ -112,6 +129,7 @@ export const ThemeProvider = ({ children }: { children: ReactNode }) => {
         setLoading(false);
       } else {
         setDisplayName('');
+        setListAccentColor(DEFAULT_LIST_ACCENT);
         const savedTheme = localStorage.getItem('theme') as Theme | null;
         if (savedTheme === 'dark' || savedTheme === 'light') {
           setTheme(savedTheme);
@@ -204,6 +222,22 @@ export const ThemeProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
+  const updateListAccentColor = async (color: string) => {
+    const trimmed = color.trim();
+    if (!trimmed.startsWith('#') || !/^#[0-9A-Fa-f]{6}$/.test(trimmed)) {
+      console.error('Color de lista inválido:', color);
+      return;
+    }
+    setListAccentColor(trimmed);
+    if (user) {
+      try {
+        await saveUserSettings(user.uid, { listAccentColor: trimmed });
+      } catch (error) {
+        console.error('Error al guardar color de lista:', error);
+      }
+    }
+  };
+
   // Aplicar tema al body
   useEffect(() => {
     if (theme === 'light') {
@@ -214,6 +248,10 @@ export const ThemeProvider = ({ children }: { children: ReactNode }) => {
       document.body.classList.remove('light-theme');
     }
   }, [theme]);
+
+  useEffect(() => {
+    document.documentElement.style.setProperty('--header-color', headerColor);
+  }, [headerColor]);
 
   if (loading) {
     return null; // O un loader si prefieres
@@ -229,10 +267,12 @@ export const ThemeProvider = ({ children }: { children: ReactNode }) => {
       headerColorDark,
       headerColorLight,
       displayName,
+      listAccentColor,
       updateHeaderColorDark,
       updateHeaderColorLight,
       updateHeaderTitle,
       updateDisplayName,
+      updateListAccentColor,
     }}>
       {children}
     </ThemeContext.Provider>

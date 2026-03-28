@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
-import { useTheme } from '../context/ThemeContext';
+import { useTheme, DEFAULT_LIST_ACCENT } from '../context/ThemeContext';
 import Modal from './Modal';
 
 interface ProfileModalProps {
@@ -17,15 +17,18 @@ export default function ProfileModal({ isOpen, onClose }: ProfileModalProps) {
     headerColorLight,
     headerTitle,
     displayName,
+    listAccentColor,
     updateHeaderColorDark,
     updateHeaderColorLight,
     updateHeaderTitle,
     updateDisplayName,
+    updateListAccentColor,
   } = useTheme();
   const [colorDarkInput, setColorDarkInput] = useState(headerColorDark);
   const [colorLightInput, setColorLightInput] = useState(headerColorLight);
   const [titleInput, setTitleInput] = useState(headerTitle);
   const [displayNameInput, setDisplayNameInput] = useState(displayName);
+  const [listAccentInput, setListAccentInput] = useState(listAccentColor);
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
@@ -34,8 +37,9 @@ export default function ProfileModal({ isOpen, onClose }: ProfileModalProps) {
       setColorLightInput(headerColorLight);
       setTitleInput(headerTitle);
       setDisplayNameInput(displayName);
+      setListAccentInput(listAccentColor);
     }
-  }, [isOpen, headerColorDark, headerColorLight, headerTitle, displayName]);
+  }, [isOpen, headerColorDark, headerColorLight, headerTitle, displayName, listAccentColor]);
 
   const handleSave = async () => {
     setSaving(true);
@@ -44,6 +48,9 @@ export default function ProfileModal({ isOpen, onClose }: ProfileModalProps) {
       await updateHeaderColorLight(colorLightInput);
       await updateHeaderTitle(titleInput);
       await updateDisplayName(displayNameInput);
+      const accentRaw = listAccentInput.trim();
+      const accentFinal = /^#[0-9A-Fa-f]{6}$/.test(accentRaw) ? accentRaw : DEFAULT_LIST_ACCENT;
+      await updateListAccentColor(accentFinal);
       onClose();
     } catch (error) {
       console.error('Error al guardar preferencias:', error);
@@ -61,6 +68,17 @@ export default function ProfileModal({ isOpen, onClose }: ProfileModalProps) {
     { name: 'Rosa', value: '#db2777' },
     { name: 'Cian', value: '#0891b2' },
     { name: 'Amarillo', value: '#ca8a04' },
+  ];
+
+  const listBarPresets = [
+    { name: 'Amarillo', value: '#eab308' },
+    { name: 'Lima', value: '#84cc16' },
+    { name: 'Cian', value: '#06b6d4' },
+    { name: 'Rosa', value: '#ec4899' },
+    { name: 'Violeta', value: '#8b5cf6' },
+    { name: 'Naranja', value: '#f97316' },
+    { name: 'Rojo', value: '#ef4444' },
+    { name: 'Azul', value: '#3b82f6' },
   ];
 
   return (
@@ -85,14 +103,68 @@ export default function ProfileModal({ isOpen, onClose }: ProfileModalProps) {
             type="text"
             value={displayNameInput}
             onChange={(e) => setDisplayNameInput(e.target.value)}
-            className={`w-full px-2 py-1.5 rounded-lg text-xs sm:text-sm ${theme === 'dark' ? 'bg-gray-700 text-white border-gray-600' : 'bg-white text-gray-900 border-gray-300'} border focus:outline-none focus:ring-2 focus:ring-blue-500`}
+            className={`w-full px-2 py-1.5 rounded-lg text-xs sm:text-sm ${theme === 'dark' ? 'bg-gray-700 text-white border-gray-600' : 'bg-white text-gray-900 border-gray-300'} border focus:outline-none focus-ring-header`}
             placeholder="Ej. Felipe o Naky"
             maxLength={40}
             autoComplete="nickname"
           />
           <p className={`text-xs mt-0.5 ${theme === 'dark' ? 'text-gray-400' : 'text-gray-500'}`}>
-            Así se muestra al añadir películas (no se usa el email).
+            Así se muestra al añadir títulos en Por ver (no se usa el email).
           </p>
+        </div>
+
+        {/* Barrita en Por ver */}
+        <div>
+          <label className={`block text-xs font-medium mb-1 ${theme === 'dark' ? 'text-gray-300' : 'text-gray-700'}`}>
+            Color de tu barrita (lista Por ver)
+          </label>
+          <div className="flex items-center gap-2 mb-2">
+            <input
+              type="color"
+              value={listAccentInput}
+              onChange={(e) => setListAccentInput(e.target.value)}
+              className="w-10 h-8 sm:w-14 sm:h-9 rounded cursor-pointer border-2 border-gray-300 flex-shrink-0"
+            />
+            <input
+              type="text"
+              value={listAccentInput}
+              onChange={(e) => setListAccentInput(e.target.value)}
+              className={`flex-1 px-2 py-1.5 rounded-lg text-xs sm:text-sm font-mono ${theme === 'dark' ? 'bg-gray-700 text-white border-gray-600' : 'bg-white text-gray-900 border-gray-300'} border focus:outline-none focus-ring-header`}
+              placeholder="#eab308"
+              maxLength={7}
+            />
+          </div>
+          <div
+            className={`flex rounded-lg overflow-hidden border mb-2 ${theme === 'dark' ? 'border-gray-600' : 'border-gray-300'}`}
+            aria-hidden
+          >
+            <div className="w-2 sm:w-2.5 shrink-0 self-stretch min-h-[3rem]" style={{ backgroundColor: listAccentInput }} />
+            <div
+              className={`flex-1 px-3 py-2.5 text-xs ${theme === 'dark' ? 'bg-gray-800 text-gray-200' : 'bg-gray-50 text-gray-800'}`}
+            >
+              <span className="font-semibold block">Vista previa</span>
+              <span className="opacity-80">Así se verá cada película o serie que añadas vos</span>
+            </div>
+          </div>
+          <p className={`text-xs mb-1 ${theme === 'dark' ? 'text-gray-400' : 'text-gray-500'}`}>Predefinidos:</p>
+          <div className="grid grid-cols-4 gap-1.5">
+            {listBarPresets.map((preset) => (
+              <button
+                key={preset.value}
+                type="button"
+                onClick={() => setListAccentInput(preset.value)}
+                className={`h-7 sm:h-9 rounded-lg border-2 transition-all ${
+                  listAccentInput.toLowerCase() === preset.value.toLowerCase()
+                    ? 'border-white ring-2 ring-[var(--header-color)] scale-105'
+                    : theme === 'dark'
+                      ? 'border-gray-600 hover:border-gray-500'
+                      : 'border-gray-300 hover:border-gray-400'
+                }`}
+                style={{ backgroundColor: preset.value }}
+                title={preset.name}
+              />
+            ))}
+          </div>
         </div>
 
         {/* Color del Header - Modo Oscuro */}
@@ -113,7 +185,7 @@ export default function ProfileModal({ isOpen, onClose }: ProfileModalProps) {
                 type="text"
                 value={colorDarkInput}
                 onChange={(e) => setColorDarkInput(e.target.value)}
-                className={`flex-1 px-2 py-1.5 rounded-lg text-xs sm:text-sm ${theme === 'dark' ? 'bg-gray-700 text-white border-gray-600' : 'bg-white text-gray-900 border-gray-300'} border focus:outline-none focus:ring-2 focus:ring-blue-500`}
+                className={`flex-1 px-2 py-1.5 rounded-lg text-xs sm:text-sm ${theme === 'dark' ? 'bg-gray-700 text-white border-gray-600' : 'bg-white text-gray-900 border-gray-300'} border focus:outline-none focus-ring-header`}
                 placeholder="#A80000"
               />
             </div>
@@ -130,7 +202,7 @@ export default function ProfileModal({ isOpen, onClose }: ProfileModalProps) {
                     onClick={() => setColorDarkInput(preset.value)}
                     className={`h-7 sm:h-10 rounded-lg border-2 transition-all ${
                       colorDarkInput === preset.value
-                        ? 'border-white ring-2 ring-blue-500 scale-105'
+                        ? 'border-white ring-2 ring-[var(--header-color)] scale-105'
                         : theme === 'dark'
                         ? 'border-gray-600 hover:border-gray-500'
                         : 'border-gray-300 hover:border-gray-400'
@@ -162,7 +234,7 @@ export default function ProfileModal({ isOpen, onClose }: ProfileModalProps) {
                 type="text"
                 value={colorLightInput}
                 onChange={(e) => setColorLightInput(e.target.value)}
-                className={`flex-1 px-2 py-1.5 rounded-lg text-xs sm:text-sm ${theme === 'dark' ? 'bg-gray-700 text-white border-gray-600' : 'bg-white text-gray-900 border-gray-300'} border focus:outline-none focus:ring-2 focus:ring-blue-500`}
+                className={`flex-1 px-2 py-1.5 rounded-lg text-xs sm:text-sm ${theme === 'dark' ? 'bg-gray-700 text-white border-gray-600' : 'bg-white text-gray-900 border-gray-300'} border focus:outline-none focus-ring-header`}
                 placeholder="#1e3a8a"
               />
             </div>
@@ -179,7 +251,7 @@ export default function ProfileModal({ isOpen, onClose }: ProfileModalProps) {
                     onClick={() => setColorLightInput(preset.value)}
                     className={`h-7 sm:h-10 rounded-lg border-2 transition-all ${
                       colorLightInput === preset.value
-                        ? 'border-white ring-2 ring-blue-500 scale-105'
+                        ? 'border-white ring-2 ring-[var(--header-color)] scale-105'
                         : theme === 'dark'
                         ? 'border-gray-600 hover:border-gray-500'
                         : 'border-gray-300 hover:border-gray-400'
@@ -240,7 +312,7 @@ export default function ProfileModal({ isOpen, onClose }: ProfileModalProps) {
             type="text"
             value={titleInput}
             onChange={(e) => setTitleInput(e.target.value)}
-            className={`w-full px-2 py-1.5 rounded-lg text-xs sm:text-sm ${theme === 'dark' ? 'bg-gray-700 text-white border-gray-600' : 'bg-white text-gray-900 border-gray-300'} border focus:outline-none focus:ring-2 focus:ring-blue-500`}
+            className={`w-full px-2 py-1.5 rounded-lg text-xs sm:text-sm ${theme === 'dark' ? 'bg-gray-700 text-white border-gray-600' : 'bg-white text-gray-900 border-gray-300'} border focus:outline-none focus-ring-header`}
             placeholder="Movie NaPi"
             maxLength={50}
           />
@@ -264,11 +336,7 @@ export default function ProfileModal({ isOpen, onClose }: ProfileModalProps) {
           <button
             onClick={handleSave}
             disabled={saving}
-            className={`flex-1 px-3 py-1.5 rounded-lg transition-colors text-xs sm:text-sm ${
-              saving
-                ? 'bg-gray-400 cursor-not-allowed'
-                : 'bg-blue-600 hover:bg-blue-700'
-            } text-white`}
+            className="flex-1 px-3 py-1.5 rounded-lg text-xs sm:text-sm btn-header-primary font-medium"
           >
             {saving ? 'Guardando...' : 'Guardar'}
           </button>

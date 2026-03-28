@@ -5,7 +5,7 @@ import { useTheme } from '../context/ThemeContext';
 
 export default function Login() {
   const navigate = useNavigate();
-  const { theme, toggleTheme, loginBgColor } = useTheme();
+  const { theme, toggleTheme, loginBgColor, headerColor } = useTheme();
   const [isLogin, setIsLogin] = useState(true);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -146,7 +146,7 @@ export default function Login() {
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className={`w-full border rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
+              className={`w-full border rounded px-3 py-2 focus:outline-none focus-ring-header ${
                 theme === 'dark' 
                   ? 'border-gray-600 bg-gray-700 text-white' 
                   : 'border-gray-300 bg-white text-gray-800'
@@ -163,7 +163,7 @@ export default function Login() {
               type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className={`w-full border rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
+              className={`w-full border rounded px-3 py-2 focus:outline-none focus-ring-header ${
                 theme === 'dark' 
                   ? 'border-gray-600 bg-gray-700 text-white' 
                   : 'border-gray-300 bg-white text-gray-800'
@@ -186,7 +186,7 @@ export default function Login() {
           <button
             type="submit"
             disabled={loading}
-            className="w-full bg-blue-600 text-white py-2 rounded hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            className="w-full py-2 rounded btn-header-primary font-medium"
           >
             {loading ? 'Cargando...' : isLogin ? 'Iniciar Sesión' : 'Registrarse'}
           </button>
@@ -194,12 +194,10 @@ export default function Login() {
 
         <div className="mt-4 text-center">
           <button
+            type="button"
             onClick={() => setIsLogin(!isLogin)}
-            className={`transition-colors ${
-              theme === 'dark' 
-                ? 'text-blue-400 hover:text-blue-300' 
-                : 'text-blue-600 hover:text-blue-800'
-            }`}
+            className="transition-opacity hover:opacity-80 underline-offset-2 hover:underline font-medium text-sm"
+            style={{ color: headerColor }}
           >
             {isLogin ? '¿No tienes cuenta? Regístrate' : '¿Ya tienes cuenta? Inicia sesión'}
           </button>

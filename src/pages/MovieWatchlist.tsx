@@ -9,7 +9,7 @@ import ConfirmModal from '../components/ConfirmModal';
 
 export default function MovieWatchlist() {
   const { user } = useAuth();
-  const { theme, displayName } = useTheme();
+  const { theme, displayName, listAccentColor } = useTheme();
   const { showToast } = useToast();
   const [movies, setMovies] = useState<Movie[]>([]);
   const [loading, setLoading] = useState(true);
@@ -58,9 +58,10 @@ export default function MovieWatchlist() {
         createdByUid: user.uid,
         createdByEmail: user.email || '',
         createdByName: name,
+        listAccentColor,
       });
       setTitle('');
-      showToast('Película añadida', 'info');
+      showToast('Título añadido', 'info');
       await load();
     } catch {
       showToast('Error al guardar', 'error');
@@ -92,11 +93,11 @@ export default function MovieWatchlist() {
     <div className="max-w-3xl mx-auto space-y-6">
       <div>
         <h2 className={`text-xl sm:text-2xl font-bold ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>
-          Películas por ver
+          Película/Serie · Por ver
         </h2>
         <p className={`mt-1 text-sm ${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}`}>
           Solo ves las que <strong>vos</strong> todavía no puntuaste; la otra persona puede seguir viéndolas en su lista.
-          Las películas siguen en la app: podés editar tu nota en <strong>Puntuar</strong>. Tu nombre en lista:{' '}
+          Los títulos siguen en la app: podés editar tu nota en <strong>Puntuar</strong>. Nombre y color de barrita:{' '}
           <strong>Mi perfil</strong>.
         </p>
       </div>
@@ -106,7 +107,7 @@ export default function MovieWatchlist() {
         className={`rounded-xl border p-4 sm:p-5 space-y-3 ${card}`}
       >
         <h3 className={`font-semibold ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>
-          Añadir película
+          Añadir película o serie
         </h3>
         <div>
           <label className={`block text-sm font-medium mb-1 ${label}`}>Título</label>
@@ -114,21 +115,21 @@ export default function MovieWatchlist() {
             type="text"
             value={title}
             onChange={(e) => setTitle(e.target.value)}
-            className={`w-full border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-violet-500 ${input}`}
-            placeholder="Ej. Parasite"
+              className={`w-full border rounded-lg px-3 py-2 focus:outline-none focus-ring-header ${input}`}
+            placeholder="Ej. Parasite, The Bear…"
             required
           />
         </div>
         <button
           type="submit"
           disabled={saving}
-          className="w-full sm:w-auto px-5 py-2 rounded-lg bg-violet-600 text-white font-medium hover:bg-violet-700 disabled:opacity-50"
+          className="w-full sm:w-auto px-5 py-2 rounded-lg btn-header-primary font-medium"
         >
           {saving ? 'Guardando…' : 'Añadir a la lista'}
         </button>
       </form>
 
-      <div className={`rounded-xl border ${card} overflow-hidden`}>
+      <div className={`rounded-xl border ${card} overflow-hidden p-2 sm:p-3`}>
         {loading ? (
           <div className={`p-8 text-center ${theme === 'dark' ? 'text-gray-400' : 'text-gray-500'}`}>
             Cargando…
@@ -136,11 +137,11 @@ export default function MovieWatchlist() {
         ) : movies.length === 0 ? (
           <div className={`p-8 text-center space-y-2 ${theme === 'dark' ? 'text-gray-400' : 'text-gray-500'}`}>
             {totalInDb === 0 ? (
-              <p>Todavía no hay películas. Añadí la primera arriba.</p>
+              <p>Todavía no hay nada en la lista. Añadí la primera película o serie arriba.</p>
             ) : (
               <>
                 <p className={theme === 'dark' ? 'text-gray-300' : 'text-gray-700'}>
-                  Ya puntuaste todas las películas que había en la lista.
+                  Ya puntuaste todo lo que había en tu lista por ver.
                 </p>
                 <p className="text-sm">
                   Seguís pudiendo cambiar una nota u opinión en <strong>Puntuar</strong> (ahí aparecen todas).
@@ -149,40 +150,49 @@ export default function MovieWatchlist() {
             )}
           </div>
         ) : (
-          <ul className="divide-y divide-gray-200 dark:divide-gray-700">
+          <ul className="space-y-2">
             {movies.map((m) => (
               <li
                 key={m.id}
-                className={`flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 px-4 py-3 ${
-                  theme === 'dark' ? 'hover:bg-gray-700/40' : 'hover:bg-gray-50'
-                }`}
+                className={`flex overflow-hidden rounded-xl border ${
+                  theme === 'dark'
+                    ? 'border-gray-700 bg-gray-800/70 hover:bg-gray-800'
+                    : 'border-gray-200 bg-white shadow-sm hover:bg-gray-50/80'
+                } transition-colors`}
               >
-                <div>
-                  <span className={`font-medium ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>
-                    {m.title}
-                  </span>
-                  <div className={`text-xs mt-0.5 ${theme === 'dark' ? 'text-gray-500' : 'text-gray-500'}`}>
-                    Añadida por {m.createdByName.trim() || 'Sin nombre'}
+                <div
+                  className="w-1.5 sm:w-2 shrink-0 self-stretch min-h-[4.5rem] sm:min-h-[3.25rem]"
+                  style={{ backgroundColor: m.listAccentColor }}
+                  aria-hidden
+                />
+                <div className="flex flex-1 flex-col sm:flex-row sm:items-center sm:justify-between gap-2 px-3 py-3 sm:pl-4">
+                  <div className="min-w-0">
+                    <span className={`font-medium ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>
+                      {m.title}
+                    </span>
+                    <div className={`text-xs mt-0.5 ${theme === 'dark' ? 'text-gray-500' : 'text-gray-500'}`}>
+                      Añadida por {m.createdByName.trim() || 'Sin nombre'}
+                    </div>
                   </div>
-                </div>
-                <div className="flex gap-2 shrink-0">
-                  <Link
-                    to={`/puntuar?pelicula=${m.id}`}
-                    className="px-3 py-1.5 rounded-lg text-sm bg-violet-600/90 text-white hover:bg-violet-600"
-                  >
-                    Puntuar
-                  </Link>
-                  <button
-                    type="button"
-                    onClick={() => setMovieToDelete(m)}
-                    className={`px-3 py-1.5 rounded-lg text-sm ${
-                      theme === 'dark'
-                        ? 'bg-gray-700 text-gray-200 hover:bg-gray-600'
-                        : 'bg-gray-200 text-gray-800 hover:bg-gray-300'
-                    }`}
-                  >
-                    Quitar
-                  </button>
+                  <div className="flex gap-2 shrink-0">
+                    <Link
+                      to={`/puntuar?pelicula=${m.id}`}
+                      className="inline-flex items-center justify-center px-3 py-1.5 rounded-lg text-sm btn-header-primary font-medium"
+                    >
+                      Puntuar
+                    </Link>
+                    <button
+                      type="button"
+                      onClick={() => setMovieToDelete(m)}
+                      className={`px-3 py-1.5 rounded-lg text-sm ${
+                        theme === 'dark'
+                          ? 'bg-gray-700 text-gray-200 hover:bg-gray-600'
+                          : 'bg-gray-200 text-gray-800 hover:bg-gray-300'
+                      }`}
+                    >
+                      Quitar
+                    </button>
+                  </div>
                 </div>
               </li>
             ))}
@@ -194,7 +204,7 @@ export default function MovieWatchlist() {
         isOpen={!!movieToDelete}
         onClose={() => setMovieToDelete(null)}
         onConfirm={handleConfirmDelete}
-        title="¿Sacar esta película?"
+        title="¿Sacar esta película o serie?"
         message={
           movieToDelete
             ? `Vas a quitar «${movieToDelete.title}» de la lista compartida. Si había puntuaciones u opiniones, también se borran.`

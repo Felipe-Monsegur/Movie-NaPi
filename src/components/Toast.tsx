@@ -1,4 +1,5 @@
 import { useEffect } from 'react';
+import { useTheme } from '../context/ThemeContext';
 
 export type ToastType = 'success' | 'error' | 'info' | 'warning';
 
@@ -10,6 +11,8 @@ interface ToastProps {
 }
 
 export default function Toast({ message, type, onClose, duration = 4000 }: ToastProps) {
+  const { headerColor } = useTheme();
+
   useEffect(() => {
     const timer = setTimeout(() => {
       onClose();
@@ -30,8 +33,8 @@ export default function Toast({ message, type, onClose, duration = 4000 }: Toast
       icon: '✕',
     },
     info: {
-      bg: 'bg-blue-600',
-      border: 'border-blue-500',
+      bg: '',
+      border: '',
       icon: 'ℹ',
     },
     warning: {
@@ -42,10 +45,16 @@ export default function Toast({ message, type, onClose, duration = 4000 }: Toast
   };
 
   const style = typeStyles[type];
+  const isInfo = type === 'info';
 
   return (
     <div
-      className={`${style.bg} ${style.border} border-l-4 text-white px-6 py-4 rounded-lg shadow-2xl flex items-center gap-3 min-w-[300px] max-w-[500px] animate-slide-in-right`}
+      className={`${!isInfo ? `${style.bg} ${style.border} ` : ''}border-l-4 text-white px-6 py-4 rounded-lg shadow-2xl flex items-center gap-3 min-w-[300px] max-w-[500px] animate-slide-in-right`}
+      style={
+        isInfo
+          ? { backgroundColor: headerColor, borderLeftColor: headerColor }
+          : undefined
+      }
     >
       <span className="text-2xl font-bold flex-shrink-0">{style.icon}</span>
       <p className="flex-1 text-sm font-medium">{message}</p>

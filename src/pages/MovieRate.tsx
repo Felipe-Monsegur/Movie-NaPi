@@ -1,18 +1,22 @@
 import { useEffect, useMemo, useState } from 'react';
-import { useSearchParams } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
 import { useToast } from '../context/ToastContext';
 import { getMovies, getMyRating, upsertRating } from '../services/firebaseService';
 import { Movie } from '../types';
+import { hexToRgba } from '../utils/color';
+import { clampScoreToHalfSteps, formatScoreDisplay } from '../utils/scoreFormat';
+import { scoreToDisplayColor } from '../utils/scoreColor';
 
 function sortByTitle(a: Movie, b: Movie) {
   return a.title.localeCompare(b.title, 'es', { sensitivity: 'base' });
 }
 
 export default function MovieRate() {
+  const navigate = useNavigate();
   const { user } = useAuth();
-  const { theme, displayName } = useTheme();
+  const { theme, displayName, headerColor } = useTheme();
   const { showToast } = useToast();
   const [searchParams] = useSearchParams();
   const paramMovieId = searchParams.get('pelicula') || '';
@@ -38,7 +42,7 @@ export default function MovieRate() {
           return '';
         });
       } catch {
-        showToast('No se pudo cargar las películas', 'error');
+        showToast('No se pudo cargar la lista', 'error');
       } finally {
         setLoadingList(false);
       }
@@ -66,7 +70,7 @@ export default function MovieRate() {
         const r = await getMyRating(movieId, user.uid);
         if (!cancelled) {
           if (r) {
-            setScore(r.score);
+            setScore(clampScoreToHalfSteps(r.score));
             setOpinion(r.opinion);
           } else {
             setScore(7);
@@ -94,16 +98,18 @@ export default function MovieRate() {
       return;
     }
     setSaving(true);
+    const scoreToSave = clampScoreToHalfSteps(score);
     try {
       await upsertRating({
         movieId,
         userId: user.uid,
         userEmail: user.email || '',
         userDisplayName: name,
-        score,
+        score: scoreToSave,
         opinion,
       });
       showToast('Valoración guardada', 'info');
+      navigate('/panel');
     } catch {
       showToast('Error al guardar', 'error');
     } finally {
@@ -122,11 +128,7 @@ export default function MovieRate() {
   const listRowInactive =
     theme === 'dark'
       ? 'text-gray-200 hover:bg-gray-700/80 border-gray-700'
-      : 'text-gray-800 hover:bg-violet-50 border-gray-100';
-  const listRowActive =
-    theme === 'dark'
-      ? 'bg-violet-600/25 text-white border-violet-500/40 ring-1 ring-violet-500/30'
-      : 'bg-violet-100 text-violet-900 border-violet-200 ring-1 ring-violet-200';
+      : 'text-gray-800 hover:bg-gray-100 border-gray-100';
 
   if (loadingList) {
     return (
@@ -140,7 +142,7 @@ export default function MovieRate() {
     return (
       <div className={`max-w-lg mx-auto text-center py-12 rounded-xl border ${card} px-6`}>
         <p className={theme === 'dark' ? 'text-gray-300' : 'text-gray-700'}>
-          Primero añadí películas en <strong>Por ver</strong>.
+          Primero añadí títulos en <strong>Por ver</strong> (película o serie).
         </p>
       </div>
     );
@@ -153,14 +155,14 @@ export default function MovieRate() {
           Puntuar y opinar
         </h2>
         <p className={`mt-1 text-sm ${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}`}>
-          Buscá la película, tocala para elegirla y después cargá nota y opinión.
+          Buscá el título (película o serie), tocá para elegirlo y después cargá nota y opinión.
         </p>
       </div>
 
       <form onSubmit={handleSubmit} className={`rounded-xl border p-4 sm:p-6 space-y-5 ${card}`}>
         <div className="space-y-2">
           <label htmlFor="movie-search" className={`block text-sm font-medium ${label}`}>
-            Buscar y elegir película
+            Buscar y elegir (película o serie)
           </label>
           <div className="relative">
             <span
@@ -174,7 +176,7 @@ export default function MovieRate() {
               type="search"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className={`w-full border rounded-lg pl-10 pr-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-violet-500 ${input}`}
+              className={`w-full border rounded-lg pl-10 pr-3 py-2.5 focus:outline-none focus-ring-header ${input}`}
               placeholder="Buscar por título…"
               autoComplete="off"
             />
@@ -203,8 +205,18 @@ export default function MovieRate() {
                         aria-selected={active}
                         onClick={() => setMovieId(m.id)}
                         className={`w-full text-left px-3 py-3 sm:py-2.5 text-sm transition-colors border-l-4 ${
-                          active ? `${listRowActive} border-l-violet-500` : `${listRowInactive} border-l-transparent`
+                          active ? '' : `${listRowInactive} border-l-transparent`
                         }`}
+                        style={
+                          active
+                            ? {
+                                backgroundColor: hexToRgba(headerColor, theme === 'dark' ? 0.28 : 0.12),
+                                borderLeftColor: headerColor,
+                                borderLeftWidth: 4,
+                                boxShadow: `inset 0 0 0 1px ${hexToRgba(headerColor, 0.28)}`,
+                              }
+                            : undefined
+                        }
                       >
                         <span className="font-medium">{m.title}</span>
                         {m.year != null && !Number.isNaN(m.year) && (
@@ -222,40 +234,46 @@ export default function MovieRate() {
 
           {selected ? (
             <p className={`text-xs ${theme === 'dark' ? 'text-gray-500' : 'text-gray-500'}`}>
-              Elegida: <span className="font-medium text-violet-600 dark:text-violet-300">{selected.title}</span>
+              Elegida:{' '}
+              <span className="font-medium" style={{ color: headerColor }}>
+                {selected.title}
+              </span>
               {' · '}
               Añadida por {selected.createdByName.trim() || 'Sin nombre'}
             </p>
           ) : (
             <p className={`text-xs ${theme === 'dark' ? 'text-amber-200/80' : 'text-amber-800'}`}>
-              Elegí una película de la lista para poder puntuar.
+              Elegí un título de la lista para poder puntuar.
             </p>
           )}
         </div>
 
         <div className={!movieId ? 'opacity-50 pointer-events-none' : ''}>
           <div className="flex justify-between items-baseline">
-            <label className={`text-sm font-medium ${label}`}>Puntuación (1–10)</label>
+            <label className={`text-sm font-medium ${label}`}>Puntuación (1–10, medios puntos)</label>
             <span
-              className={`text-lg font-bold tabular-nums ${theme === 'dark' ? 'text-violet-300' : 'text-violet-700'}`}
+              className="text-lg font-bold tabular-nums transition-colors duration-150"
+              style={{ color: scoreToDisplayColor(score, theme) }}
             >
-              {score}
+              {formatScoreDisplay(score)}
             </span>
           </div>
           <input
             type="range"
             min={1}
             max={10}
-            step={1}
+            step={0.5}
             value={score}
-            onChange={(e) => setScore(Number(e.target.value))}
-            className="w-full mt-2 accent-violet-600"
+            onChange={(e) => setScore(clampScoreToHalfSteps(Number(e.target.value)))}
+            className="w-full mt-2"
+            style={{ accentColor: scoreToDisplayColor(score, theme) }}
             disabled={loadingRating || !movieId}
           />
           <div className="flex justify-between text-xs text-gray-500 mt-1">
             <span>1</span>
             <span>10</span>
           </div>
+          <p className="text-xs mt-0.5 text-gray-500">Deslizá de a medios puntos (1, 1.5, … 10).</p>
         </div>
 
         <div className={!movieId ? 'opacity-50 pointer-events-none' : ''}>
@@ -264,7 +282,7 @@ export default function MovieRate() {
             value={opinion}
             onChange={(e) => setOpinion(e.target.value)}
             rows={5}
-            className={`w-full border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-violet-500 resize-y min-h-[120px] ${input}`}
+            className={`w-full border rounded-lg px-3 py-2 focus:outline-none focus-ring-header resize-y min-h-[120px] ${input}`}
             placeholder="Qué te pareció, sin spoilers o con spoilers avisando…"
             disabled={loadingRating || !movieId}
           />
@@ -273,7 +291,7 @@ export default function MovieRate() {
         <button
           type="submit"
           disabled={saving || loadingRating || !movieId}
-          className="w-full py-2.5 rounded-lg bg-violet-600 text-white font-medium hover:bg-violet-700 disabled:opacity-50 disabled:cursor-not-allowed"
+          className="w-full py-2.5 rounded-lg btn-header-primary font-medium"
         >
           {saving ? 'Guardando…' : loadingRating ? 'Cargando…' : 'Guardar mi valoración'}
         </button>
