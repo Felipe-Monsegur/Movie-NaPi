@@ -213,17 +213,21 @@ export default function ScoresPanel() {
           return (
             <article key={movie.id} className={`rounded-xl border overflow-hidden ${card}`}>
               <div
-                className={`px-4 py-3 border-b flex flex-wrap items-baseline justify-between gap-2 ${
+                className={`px-4 py-3 border-b flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between sm:gap-2 ${
                   theme === 'dark' ? 'border-gray-700 bg-gray-800/80' : 'border-gray-100 bg-gray-50'
                 }`}
               >
-                <h3 className={`font-semibold text-lg ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>
+                <h3
+                  className={`font-semibold text-lg min-w-0 break-words sm:flex-1 sm:min-w-[12rem] sm:pr-2 ${
+                    theme === 'dark' ? 'text-white' : 'text-gray-900'
+                  }`}
+                >
                   {movie.title}
                   <span className={`font-normal text-base ${theme === 'dark' ? 'text-gray-400' : 'text-gray-500'}`}>
                     {subtitle}
                   </span>
                 </h3>
-                <div className="flex flex-wrap items-center gap-2 sm:gap-3">
+                <div className="flex flex-row flex-wrap items-center gap-2 sm:gap-3 shrink-0 w-full sm:w-auto">
                   <div className="flex items-center gap-2">
                     <span className={`text-sm ${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}`}>Promedio</span>
                     {hideOthers ? (
@@ -289,12 +293,17 @@ export default function ScoresPanel() {
                       Puntuá vos en <strong>Puntuar</strong> para ver notas, opiniones y promedio completos.
                     </p>
                   ) : null}
-                  <table className="w-full text-sm">
+                  <table className="w-full min-w-0 table-fixed text-xs sm:text-sm">
+                    <colgroup>
+                      <col />
+                      <col className="w-[3.25rem] sm:w-20" />
+                      <col className="w-[40%] min-w-[7.5rem] sm:min-w-[10rem] sm:w-[42%]" />
+                    </colgroup>
                     <thead>
-                      <tr className={`text-left border-b ${theme === 'dark' ? 'border-gray-700' : 'border-gray-200'}`}>
-                        <th className={`px-4 py-2 font-medium ${th}`}>Quién</th>
-                        <th className={`px-4 py-2 font-medium w-24 ${th}`}>Nota</th>
-                        <th className={`px-4 py-2 font-medium ${th}`}>Opinión</th>
+                      <tr className={`border-b ${theme === 'dark' ? 'border-gray-700' : 'border-gray-200'}`}>
+                        <th className={`px-2 py-2 sm:px-4 font-medium text-left min-w-0 ${th}`}>Quién</th>
+                        <th className={`px-2 py-2 sm:px-4 font-medium text-right ${th}`}>Nota</th>
+                        <th className={`px-2 py-2 sm:px-4 font-medium text-right ${th}`}>Opinión</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -315,11 +324,11 @@ export default function ScoresPanel() {
                                 theme === 'dark' ? 'border-gray-700' : 'border-gray-100'
                               }`}
                             >
-                              <td className={`px-4 py-3 align-top font-medium ${td}`}>
+                              <td className={`px-2 py-2.5 sm:px-4 sm:py-3 align-top font-medium min-w-0 break-words ${td}`}>
                                 {raterLabel(r, nameByUid)}
                               </td>
                               <td
-                                className={`px-4 py-3 align-top font-semibold tabular-nums ${
+                                className={`px-2 py-2.5 sm:px-4 sm:py-3 align-top text-right font-semibold tabular-nums ${
                                   mask ? (theme === 'dark' ? 'text-gray-400' : 'text-gray-500') : ''
                                 }`}
                                 style={!mask ? { color: scoreToDisplayColor(r.score, theme) } : undefined}
@@ -328,7 +337,7 @@ export default function ScoresPanel() {
                                 {mask ? '?' : formatScoreDisplay(r.score)}
                               </td>
                               <td
-                                className={`px-4 py-3 align-top whitespace-pre-wrap font-medium ${
+                                className={`px-2 py-2.5 sm:px-4 sm:py-3 align-top text-right whitespace-pre-wrap break-words font-medium ${
                                   mask ? (theme === 'dark' ? 'text-gray-400' : 'text-gray-500') : td
                                 }`}
                                 aria-label={mask ? 'Opinión oculta hasta que puntúes' : undefined}
