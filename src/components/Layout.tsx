@@ -4,6 +4,7 @@ import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
 import { logout } from '../services/authService';
 import ProfileModal from './ProfileModal';
+import ScrollToTopButton from './ScrollToTopButton';
 import { IconCatalog, IconChart, IconList, IconStar } from './icons/AppIcons';
 
 interface LayoutProps {
@@ -209,6 +210,7 @@ export default function Layout({ children }: LayoutProps) {
 
       <main className="container mx-auto px-2 sm:px-4 py-4 sm:py-6">{children}</main>
 
+      <ScrollToTopButton />
       <ProfileModal isOpen={isProfileModalOpen} onClose={() => setIsProfileModalOpen(false)} />
     </div>
   );
