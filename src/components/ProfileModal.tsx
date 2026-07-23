@@ -8,6 +8,75 @@ interface ProfileModalProps {
   onClose: () => void;
 }
 
+const fieldClass =
+  'w-full px-3 py-2.5 rounded-control text-sm bg-surface-2 text-ink border border-line focus:outline-none focus-ring-header';
+const labelClass = 'block text-xs text-ink-muted ui-label mb-1.5';
+const hintClass = 'text-xs text-ink-muted mt-1.5 leading-relaxed';
+const sectionClass = 'rounded-panel border border-line bg-surface-2/40 p-3.5 sm:p-4 space-y-3';
+
+function ColorSwatches({
+  colors,
+  value,
+  onPick,
+}: {
+  colors: { name: string; value: string }[];
+  value: string;
+  onPick: (v: string) => void;
+}) {
+  return (
+    <div className="grid grid-cols-4 sm:grid-cols-8 gap-2">
+      {colors.map((preset) => {
+        const active = value.toLowerCase() === preset.value.toLowerCase();
+        return (
+          <button
+            key={preset.value}
+            type="button"
+            onClick={() => onPick(preset.value)}
+            className={`h-8 sm:h-9 rounded-control border transition-all ${
+              active
+                ? 'border-white ring-2 ring-[var(--header-color)] scale-[1.03]'
+                : 'border-line hover:border-line-strong'
+            }`}
+            style={{ backgroundColor: preset.value }}
+            title={preset.name}
+            aria-label={preset.name}
+          />
+        );
+      })}
+    </div>
+  );
+}
+
+function ColorRow({
+  value,
+  onChange,
+  placeholder,
+}: {
+  value: string;
+  onChange: (v: string) => void;
+  placeholder: string;
+}) {
+  return (
+    <div className="flex items-center gap-2.5">
+      <input
+        type="color"
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        className="w-11 h-10 rounded-control cursor-pointer border border-line bg-transparent shrink-0 overflow-hidden"
+      />
+      <input
+        type="text"
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        className={`${fieldClass} font-mono`}
+        placeholder={placeholder}
+        maxLength={7}
+        spellCheck={false}
+      />
+    </div>
+  );
+}
+
 export default function ProfileModal({ isOpen, onClose }: ProfileModalProps) {
   const { user } = useAuth();
   const {
@@ -51,7 +120,6 @@ export default function ProfileModal({ isOpen, onClose }: ProfileModalProps) {
       const accentRaw = listAccentInput.trim();
       const accentFinal = /^#[0-9A-Fa-f]{6}$/.test(accentRaw) ? accentRaw : DEFAULT_LIST_ACCENT;
       await updateListAccentColor(accentFinal);
-      onClose();
     } catch (error) {
       console.error('Error al guardar preferencias:', error);
     } finally {
@@ -81,268 +149,210 @@ export default function ProfileModal({ isOpen, onClose }: ProfileModalProps) {
     { name: 'Azul', value: '#3b82f6' },
   ];
 
+  const initial = (displayNameInput.trim() || user?.email || '?').charAt(0).toUpperCase();
+
   return (
-    <Modal isOpen={isOpen} onClose={onClose} title="Mi Perfil">
-      <div className="space-y-3 sm:space-y-6">
-        {/* Email */}
-        <div>
-          <label className={`block text-xs font-medium mb-1 ${theme === 'dark' ? 'text-gray-300' : 'text-gray-700'}`}>
-            Email
-          </label>
-          <div className={`px-2 py-1.5 rounded-lg text-xs sm:text-sm ${theme === 'dark' ? 'bg-gray-700 text-gray-300' : 'bg-gray-100 text-gray-700'}`}>
-            {user?.email || 'No disponible'}
+    <Modal isOpen={isOpen} onClose={onClose} title="Configuración">
+      <div className="space-y-4 sm:space-y-5">
+        {/* Usuario */}
+        <div className="flex items-center gap-3">
+          <div
+            className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full text-white text-lg font-bold"
+            style={{
+              background: `linear-gradient(135deg, var(--header-color), color-mix(in srgb, var(--header-color) 70%, #0f172a))`,
+            }}
+          >
+            {initial}
+          </div>
+          <div className="min-w-0">
+            <p className="text-sm font-semibold text-ink truncate">
+              {displayNameInput.trim() || 'Sin nombre'}
+            </p>
+            <p className="text-xs text-ink-muted truncate">{user?.email || 'No disponible'}</p>
           </div>
         </div>
 
-        {/* Nombre en la lista */}
-        <div>
-          <label className={`block text-xs font-medium mb-1 ${theme === 'dark' ? 'text-gray-300' : 'text-gray-700'}`}>
-            Tu nombre en la lista
-          </label>
-          <input
-            type="text"
-            value={displayNameInput}
-            onChange={(e) => setDisplayNameInput(e.target.value)}
-            className={`w-full px-2 py-1.5 rounded-lg text-xs sm:text-sm ${theme === 'dark' ? 'bg-gray-700 text-white border-gray-600' : 'bg-white text-gray-900 border-gray-300'} border focus:outline-none focus-ring-header`}
-            placeholder="Ej. Felipe o Naky"
-            maxLength={40}
-            autoComplete="nickname"
-          />
-          <p className={`text-xs mt-0.5 ${theme === 'dark' ? 'text-gray-400' : 'text-gray-500'}`}>
-            Así se muestra al añadir títulos en Por ver (no se usa el email).
-          </p>
-        </div>
-
-        {/* Barrita en Por ver */}
-        <div>
-          <label className={`block text-xs font-medium mb-1 ${theme === 'dark' ? 'text-gray-300' : 'text-gray-700'}`}>
-            Color de tu barrita (lista Por ver)
-          </label>
-          <div className="flex items-center gap-2 mb-2">
-            <input
-              type="color"
-              value={listAccentInput}
-              onChange={(e) => setListAccentInput(e.target.value)}
-              className="w-10 h-8 sm:w-14 sm:h-9 rounded cursor-pointer border-2 border-gray-300 flex-shrink-0"
-            />
+        {/* Identidad */}
+        <section className={sectionClass}>
+          <h3 className="text-xs text-ink ui-label">Identidad</h3>
+          <div>
+            <label className={labelClass}>Nombre en la lista</label>
             <input
               type="text"
+              value={displayNameInput}
+              onChange={(e) => setDisplayNameInput(e.target.value)}
+              className={fieldClass}
+              placeholder="Ej. Felipe o Naky"
+              maxLength={40}
+              autoComplete="nickname"
+            />
+            <p className={hintClass}>
+              Así aparece al añadir títulos en Por ver.
+            </p>
+          </div>
+          <div>
+            <label className={labelClass}>Título del header</label>
+            <input
+              type="text"
+              value={titleInput}
+              onChange={(e) => setTitleInput(e.target.value)}
+              className={fieldClass}
+              placeholder="Movie NaPi"
+              maxLength={50}
+            />
+            <p className={hintClass}>{titleInput.length}/50</p>
+          </div>
+        </section>
+
+        {/* Lista Por ver */}
+        <section className={sectionClass}>
+          <h3 className="text-xs text-ink ui-label">Lista Por ver</h3>
+          <div>
+            <label className={labelClass}>Color de tu barrita</label>
+            <ColorRow
               value={listAccentInput}
-              onChange={(e) => setListAccentInput(e.target.value)}
-              className={`flex-1 px-2 py-1.5 rounded-lg text-xs sm:text-sm font-mono ${theme === 'dark' ? 'bg-gray-700 text-white border-gray-600' : 'bg-white text-gray-900 border-gray-300'} border focus:outline-none focus-ring-header`}
+              onChange={setListAccentInput}
               placeholder="#eab308"
-              maxLength={7}
             />
           </div>
           <div
-            className={`flex rounded-lg overflow-hidden border mb-2 ${theme === 'dark' ? 'border-gray-600' : 'border-gray-300'}`}
+            className="flex overflow-hidden rounded-control border border-line"
             aria-hidden
           >
-            <div className="w-2 sm:w-2.5 shrink-0 self-stretch min-h-[3rem]" style={{ backgroundColor: listAccentInput }} />
             <div
-              className={`flex-1 px-3 py-2.5 text-xs ${theme === 'dark' ? 'bg-gray-800 text-gray-200' : 'bg-gray-50 text-gray-800'}`}
-            >
+              className="w-2.5 shrink-0 self-stretch min-h-[3.25rem]"
+              style={{ backgroundColor: listAccentInput }}
+            />
+            <div className="flex-1 px-3 py-2.5 text-xs bg-surface text-ink">
               <span className="font-semibold block">Vista previa</span>
-              <span className="opacity-80">Así se verá cada película o serie que añadas vos</span>
+              <span className="text-ink-muted">Así se verá cada título que añadas</span>
             </div>
           </div>
-          <p className={`text-xs mb-1 ${theme === 'dark' ? 'text-gray-400' : 'text-gray-500'}`}>Predefinidos:</p>
-          <div className="grid grid-cols-4 gap-1.5">
-            {listBarPresets.map((preset) => (
-              <button
-                key={preset.value}
-                type="button"
-                onClick={() => setListAccentInput(preset.value)}
-                className={`h-7 sm:h-9 rounded-lg border-2 transition-all ${
-                  listAccentInput.toLowerCase() === preset.value.toLowerCase()
-                    ? 'border-white ring-2 ring-[var(--header-color)] scale-105'
-                    : theme === 'dark'
-                      ? 'border-gray-600 hover:border-gray-500'
-                      : 'border-gray-300 hover:border-gray-400'
-                }`}
-                style={{ backgroundColor: preset.value }}
-                title={preset.name}
-              />
-            ))}
-          </div>
-        </div>
-
-        {/* Color del Header - Modo Oscuro */}
-        <div>
-          <label className={`block text-xs font-medium mb-1 ${theme === 'dark' ? 'text-gray-300' : 'text-gray-700'}`}>
-            Color Header (Oscuro)
-          </label>
-          <div className="space-y-2">
-            {/* Input de color */}
-            <div className="flex items-center gap-2">
-              <input
-                type="color"
-                value={colorDarkInput}
-                onChange={(e) => setColorDarkInput(e.target.value)}
-                className="w-10 h-8 sm:w-16 sm:h-10 rounded cursor-pointer border-2 border-gray-300 flex-shrink-0"
-              />
-              <input
-                type="text"
-                value={colorDarkInput}
-                onChange={(e) => setColorDarkInput(e.target.value)}
-                className={`flex-1 px-2 py-1.5 rounded-lg text-xs sm:text-sm ${theme === 'dark' ? 'bg-gray-700 text-white border-gray-600' : 'bg-white text-gray-900 border-gray-300'} border focus:outline-none focus-ring-header`}
-                placeholder="#A80000"
-              />
-            </div>
-            
-            {/* Colores predefinidos */}
-            <div>
-              <p className={`text-xs mb-1 ${theme === 'dark' ? 'text-gray-400' : 'text-gray-500'}`}>
-                Predefinidos:
-              </p>
-              <div className="grid grid-cols-4 gap-1.5">
-                {presetColors.map((preset) => (
-                  <button
-                    key={preset.value}
-                    onClick={() => setColorDarkInput(preset.value)}
-                    className={`h-7 sm:h-10 rounded-lg border-2 transition-all ${
-                      colorDarkInput === preset.value
-                        ? 'border-white ring-2 ring-[var(--header-color)] scale-105'
-                        : theme === 'dark'
-                        ? 'border-gray-600 hover:border-gray-500'
-                        : 'border-gray-300 hover:border-gray-400'
-                    }`}
-                    style={{ backgroundColor: preset.value }}
-                    title={preset.name}
-                  />
-                ))}
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Color del Header - Modo Claro */}
-        <div>
-          <label className={`block text-xs font-medium mb-1 ${theme === 'dark' ? 'text-gray-300' : 'text-gray-700'}`}>
-            Color Header (Claro)
-          </label>
-          <div className="space-y-2">
-            {/* Input de color */}
-            <div className="flex items-center gap-2">
-              <input
-                type="color"
-                value={colorLightInput}
-                onChange={(e) => setColorLightInput(e.target.value)}
-                className="w-10 h-8 sm:w-16 sm:h-10 rounded cursor-pointer border-2 border-gray-300 flex-shrink-0"
-              />
-              <input
-                type="text"
-                value={colorLightInput}
-                onChange={(e) => setColorLightInput(e.target.value)}
-                className={`flex-1 px-2 py-1.5 rounded-lg text-xs sm:text-sm ${theme === 'dark' ? 'bg-gray-700 text-white border-gray-600' : 'bg-white text-gray-900 border-gray-300'} border focus:outline-none focus-ring-header`}
-                placeholder="#1e3a8a"
-              />
-            </div>
-            
-            {/* Colores predefinidos */}
-            <div>
-              <p className={`text-xs mb-1 ${theme === 'dark' ? 'text-gray-400' : 'text-gray-500'}`}>
-                Predefinidos:
-              </p>
-              <div className="grid grid-cols-4 gap-1.5">
-                {presetColors.map((preset) => (
-                  <button
-                    key={preset.value}
-                    onClick={() => setColorLightInput(preset.value)}
-                    className={`h-7 sm:h-10 rounded-lg border-2 transition-all ${
-                      colorLightInput === preset.value
-                        ? 'border-white ring-2 ring-[var(--header-color)] scale-105'
-                        : theme === 'dark'
-                        ? 'border-gray-600 hover:border-gray-500'
-                        : 'border-gray-300 hover:border-gray-400'
-                    }`}
-                    style={{ backgroundColor: preset.value }}
-                    title={preset.name}
-                  />
-                ))}
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Tema */}
-        <div>
-          <label className={`block text-xs font-medium mb-1 ${theme === 'dark' ? 'text-gray-300' : 'text-gray-700'}`}>
-            Tema
-          </label>
-          <div className="flex gap-2">
-            <button
-              onClick={toggleTheme}
-              className={`flex-1 px-3 py-1.5 rounded-lg transition-colors flex items-center justify-center gap-1.5 text-xs sm:text-sm ${
-                theme === 'dark'
-                  ? 'bg-gray-700 text-white hover:bg-gray-600'
-                  : 'bg-gray-200 text-gray-800 hover:bg-gray-300'
-              }`}
-            >
-              {theme === 'dark' ? (
-                <>
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
-                  </svg>
-                  <span className="hidden sm:inline">Modo Oscuro</span>
-                  <span className="sm:hidden">Oscuro</span>
-                </>
-              ) : (
-                <>
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
-                  </svg>
-                  <span className="hidden sm:inline">Modo Claro</span>
-                  <span className="sm:hidden">Claro</span>
-                </>
-              )}
-            </button>
-          </div>
-          <p className={`text-xs mt-0.5 ${theme === 'dark' ? 'text-gray-400' : 'text-gray-500'}`}>
-            Cambia entre modo oscuro y modo claro.
-          </p>
-        </div>
-
-        {/* Título del Header */}
-        <div>
-          <label className={`block text-xs font-medium mb-1 ${theme === 'dark' ? 'text-gray-300' : 'text-gray-700'}`}>
-            Título del Header
-          </label>
-          <input
-            type="text"
-            value={titleInput}
-            onChange={(e) => setTitleInput(e.target.value)}
-            className={`w-full px-2 py-1.5 rounded-lg text-xs sm:text-sm ${theme === 'dark' ? 'bg-gray-700 text-white border-gray-600' : 'bg-white text-gray-900 border-gray-300'} border focus:outline-none focus-ring-header`}
-            placeholder="🍿 Movie NaPi"
-            maxLength={50}
+          <ColorSwatches
+            colors={listBarPresets}
+            value={listAccentInput}
+            onPick={setListAccentInput}
           />
-          <p className={`text-xs mt-0.5 ${theme === 'dark' ? 'text-gray-400' : 'text-gray-500'}`}>
-            {titleInput.length}/50 caracteres
-          </p>
-        </div>
+        </section>
 
-        {/* Botones */}
-        <div className="flex gap-2 pt-2">
+        {/* Apariencia */}
+        <section className={sectionClass}>
+          <h3 className="text-xs text-ink ui-label">Apariencia</h3>
+
+          <div>
+            <label className={labelClass}>Tema</label>
+            <div className="grid grid-cols-2 gap-1.5 p-1 rounded-full border border-line bg-surface">
+              <button
+                type="button"
+                onClick={() => {
+                  if (theme !== 'dark') toggleTheme();
+                }}
+                className={`inline-flex items-center justify-center gap-1.5 rounded-full px-3 py-2 text-xs sm:text-sm font-semibold transition-colors ${
+                  theme === 'dark'
+                    ? 'text-white'
+                    : 'text-ink-muted hover:text-ink'
+                }`}
+                style={
+                  theme === 'dark'
+                    ? {
+                        background: `color-mix(in srgb, var(--header-color) 85%, #0f172a)`,
+                      }
+                    : undefined
+                }
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden>
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"
+                  />
+                </svg>
+                Oscuro
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  if (theme !== 'light') toggleTheme();
+                }}
+                className={`inline-flex items-center justify-center gap-1.5 rounded-full px-3 py-2 text-xs sm:text-sm font-semibold transition-colors ${
+                  theme === 'light'
+                    ? 'text-white'
+                    : 'text-ink-muted hover:text-ink'
+                }`}
+                style={
+                  theme === 'light'
+                    ? {
+                        background: `color-mix(in srgb, var(--header-color) 85%, #0f172a)`,
+                      }
+                    : undefined
+                }
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden>
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"
+                  />
+                </svg>
+                Claro
+              </button>
+            </div>
+          </div>
+
+          <div>
+            <label className={labelClass}>Color header · oscuro</label>
+            <ColorRow
+              value={colorDarkInput}
+              onChange={setColorDarkInput}
+              placeholder="#A80000"
+            />
+            <div className="mt-2">
+              <ColorSwatches
+                colors={presetColors}
+                value={colorDarkInput}
+                onPick={setColorDarkInput}
+              />
+            </div>
+          </div>
+
+          <div>
+            <label className={labelClass}>Color header · claro</label>
+            <ColorRow
+              value={colorLightInput}
+              onChange={setColorLightInput}
+              placeholder="#1e3a8a"
+            />
+            <div className="mt-2">
+              <ColorSwatches
+                colors={presetColors}
+                value={colorLightInput}
+                onPick={setColorLightInput}
+              />
+            </div>
+          </div>
+        </section>
+
+        {/* Acciones */}
+        <div className="flex gap-2.5 pt-1">
           <button
+            type="button"
             onClick={onClose}
-            className={`flex-1 px-3 py-1.5 rounded-lg transition-colors text-xs sm:text-sm ${
-              theme === 'dark'
-                ? 'bg-gray-700 text-white hover:bg-gray-600'
-                : 'bg-gray-200 text-gray-800 hover:bg-gray-300'
-            }`}
+            className="flex-1 px-4 py-2.5 rounded-control text-sm font-semibold transition-colors bg-surface-2 text-ink border border-line hover:bg-surface-3"
           >
             Cancelar
           </button>
           <button
+            type="button"
             onClick={handleSave}
             disabled={saving}
-            className="flex-1 px-3 py-1.5 rounded-lg text-xs sm:text-sm btn-header-primary font-medium"
+            className="flex-1 px-4 py-2.5 rounded-control text-sm font-semibold btn-header-primary"
           >
-            {saving ? 'Guardando...' : 'Guardar'}
+            {saving ? 'Guardando…' : 'Guardar'}
           </button>
         </div>
       </div>
     </Modal>
   );
 }
-

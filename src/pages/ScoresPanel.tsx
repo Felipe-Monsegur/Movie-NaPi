@@ -3,6 +3,7 @@ import { useTheme } from '../context/ThemeContext';
 import ConfirmModal from '../components/ConfirmModal';
 import EditMovieTitleModal from '../components/EditMovieTitleModal';
 import { IconEditOutline, IconTrashOutline } from '../components/icons/PanelActionIcons';
+import { IconSearch } from '../components/icons/AppIcons';
 import { scoreToBadgeStyle, scoreToDisplayColor } from '../utils/scoreColor';
 import { formatScoreDisplay } from '../utils/scoreFormat';
 import { useAuth } from '../context/AuthContext';
@@ -99,14 +100,11 @@ export default function ScoresPanel() {
     return moviesByRecentRating.filter((m) => m.title.toLowerCase().includes(q));
   }, [moviesByRecentRating, panelSearchQuery]);
 
-  const card = theme === 'dark' ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200';
-  const label = theme === 'dark' ? 'text-gray-300' : 'text-gray-700';
-  const input =
-    theme === 'dark'
-      ? 'border-gray-600 bg-gray-700 text-white'
-      : 'border-gray-300 bg-white text-gray-800';
-  const th = theme === 'dark' ? 'text-gray-300' : 'text-gray-600';
-  const td = theme === 'dark' ? 'text-gray-200' : 'text-gray-800';
+  const card = 'bg-surface border-line shadow-panel';
+  const label = 'text-ink-muted ui-label text-xs';
+  const input = 'border-line bg-surface-2 text-ink rounded-control';
+  const th = 'text-ink-muted ui-label text-[0.65rem]';
+  const td = 'text-ink';
 
   if (loading) {
     return (
@@ -143,10 +141,10 @@ export default function ScoresPanel() {
           </label>
           <div className="relative max-w-md">
             <span
-              className={`pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-lg ${theme === 'dark' ? 'text-gray-500' : 'text-gray-400'}`}
+              className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-ink-muted"
               aria-hidden
             >
-              🔍
+              <IconSearch size={18} className="w-[18px] h-[18px]" />
             </span>
             <input
               id="panel-search"

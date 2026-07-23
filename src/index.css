@@ -2,18 +2,214 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Sincronizado desde ThemeContext (headerColor según tema claro/oscuro) */
+/* Estilo Finanzas 11 — tokens + tipografía (reutilizable) */
 :root {
-  --header-color: #5b21b6;
+  --font-ui: 'Plus Jakarta Sans', system-ui, sans-serif;
+  --header-color: #a80000;
+  --app-bg: #0c111b;
+  --surface: #151c2a;
+  --surface-2: #1c2536;
+  --surface-3: #243044;
+  --text: #f1f5f9;
+  --text-muted: #94a3b8;
+  --border: rgba(148, 163, 184, 0.14);
+  --border-strong: rgba(148, 163, 184, 0.28);
+  --radius-panel: 1rem;
+  --radius-control: 0.75rem;
+  --panel-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.04),
+    0 12px 32px -18px rgba(0, 0, 0, 0.65);
+  --color-import: #3b82f6;
+  --color-export: #22c55e;
+  --color-danger: #ef4444;
+}
+
+body.light-theme {
+  --app-bg: #d9e0ea;
+  --surface: #eef2f7;
+  --surface-2: #e4ebf4;
+  --surface-3: #d5dee9;
+  --text: #0f172a;
+  --text-muted: #64748b;
+  --border: rgba(15, 23, 42, 0.1);
+  --border-strong: rgba(15, 23, 42, 0.18);
+  --panel-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.7),
+    0 12px 32px -18px rgba(15, 23, 42, 0.22);
+}
+
+body {
+  margin: 0;
+  font-family: var(--font-ui);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  background-color: var(--app-bg);
+  color: var(--text);
+  min-height: 100vh;
+}
+
+/* Ocultar scrollbar visual (sigue permitiendo scroll) */
+html,
+body,
+* {
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* IE/Edge legacy */
+}
+
+html::-webkit-scrollbar,
+body::-webkit-scrollbar,
+*::-webkit-scrollbar {
+  width: 0;
+  height: 0;
+  display: none;
+}
+
+/* Fondo no flat: glow de acento + azul suave + gradiente vertical */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background:
+    radial-gradient(
+      ellipse 70% 50% at 100% 0%,
+      color-mix(in srgb, var(--header-color) 28%, transparent),
+      transparent 55%
+    ),
+    radial-gradient(
+      ellipse 60% 45% at 0% 100%,
+      rgba(56, 89, 140, 0.22),
+      transparent 50%
+    ),
+    linear-gradient(
+      180deg,
+      color-mix(in srgb, var(--app-bg) 92%, #1e293b) 0%,
+      var(--app-bg) 45%,
+      color-mix(in srgb, var(--app-bg) 88%, #0f172a) 100%
+    );
+}
+
+body.light-theme::before {
+  background:
+    radial-gradient(
+      ellipse 70% 50% at 100% 0%,
+      color-mix(in srgb, var(--header-color) 18%, transparent),
+      transparent 55%
+    ),
+    radial-gradient(
+      ellipse 60% 45% at 0% 100%,
+      rgba(56, 89, 140, 0.12),
+      transparent 50%
+    ),
+    linear-gradient(
+      180deg,
+      color-mix(in srgb, var(--app-bg) 90%, #f8fafc) 0%,
+      var(--app-bg) 50%,
+      color-mix(in srgb, var(--app-bg) 92%, #cbd5e1) 100%
+    );
+}
+
+/* Labels / botones densos / headers de tabla */
+.ui-label {
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.ui-panel {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-panel);
+  box-shadow: var(--panel-shadow);
+}
+
+.ui-panel-2 {
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-panel);
+  box-shadow: var(--panel-shadow);
+}
+
+.ui-nav-glass {
+  background: color-mix(in srgb, var(--surface) 78%, transparent);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  border-bottom: 1px solid var(--header-color);
+}
+
+.ui-header-gradient {
+  background: linear-gradient(
+    135deg,
+    var(--header-color),
+    color-mix(in srgb, var(--header-color) 78%, #0f172a)
+  );
+}
+
+.ui-tab {
+  position: relative;
+  border-radius: 9999px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  text-transform: none;
+  font-size: 0.8125rem;
+  line-height: 1.2;
+  color: var(--text-muted);
+  border: 1px solid transparent;
+  background: transparent;
+  transition:
+    background-color 0.15s ease,
+    color 0.15s ease,
+    border-color 0.15s ease;
+}
+
+@media (min-width: 640px) {
+  .ui-tab {
+    font-size: 0.875rem;
+  }
+}
+
+.ui-tab:hover {
+  color: var(--text);
+  background: color-mix(in srgb, var(--header-color) 10%, transparent);
+  border-color: color-mix(in srgb, var(--header-color) 28%, transparent);
+}
+
+.ui-tab-active {
+  color: #fff;
+  background: color-mix(in srgb, var(--header-color) 28%, transparent);
+  border-color: color-mix(in srgb, var(--header-color) 72%, white);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--header-color) 20%, transparent);
+}
+
+.ui-tab-active:hover {
+  color: #fff;
+  background: color-mix(in srgb, var(--header-color) 34%, transparent);
+  border-color: color-mix(in srgb, var(--header-color) 78%, white);
+}
+
+table {
+  font-variant-numeric: tabular-nums;
+}
+
+/* Inputs en mobile: mínimo 16px (evita zoom iOS) */
+@media (max-width: 640px) {
+  input,
+  textarea,
+  select {
+    font-size: 16px !important;
+  }
 }
 
 .btn-header-primary {
   background-color: var(--header-color);
   color: #fff;
-  transition: filter 0.15s ease;
+  border-radius: var(--radius-control);
+  transition: filter 0.15s ease, box-shadow 0.15s ease;
 }
 .btn-header-primary:hover:not(:disabled) {
   filter: brightness(1.12);
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--header-color) 40%, white);
 }
 .btn-header-primary:active:not(:disabled) {
   filter: brightness(0.9);
@@ -33,7 +229,7 @@
 }
 .btn-panel-edit:focus-visible {
   outline: none;
-  box-shadow: 0 0 0 2px var(--header-color);
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--header-color) 55%, white);
 }
 
 input.focus-ring-header:focus,
@@ -41,22 +237,11 @@ textarea.focus-ring-header:focus,
 select.focus-ring-header:focus {
   outline: none;
   border-color: var(--header-color);
-  box-shadow: 0 0 0 2px var(--header-color);
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--header-color) 45%, white);
 }
 
 input.accent-header {
   accent-color: var(--header-color);
-}
-
-body {
-  margin: 0;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
-    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
-    sans-serif;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-  background-color: #111827; /* gray-900 */
-  color: #f3f4f6; /* gray-100 */
 }
 
 @keyframes slideInRight {
@@ -73,5 +258,3 @@ body {
 .animate-slide-in-right {
   animation: slideInRight 0.3s ease-out;
 }
-
-

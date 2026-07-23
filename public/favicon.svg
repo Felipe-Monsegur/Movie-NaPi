@@ -1,29 +1,21 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" fill="none" aria-hidden="true">
-  <defs>
-    <linearGradient id="pc-k" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="#fef08a" />
-      <stop offset="55%" stop-color="#facc15" />
-      <stop offset="100%" stop-color="#eab308" />
-    </linearGradient>
-  </defs>
-  <!-- Vaso / cubeta a rayas -->
-  <path
-    d="M7 15h18l-1.4 13H8.4L7 15z"
-    fill="#b91c1c"
-  />
-  <path
-    d="M9 15v13M12 15v13M16 15v13M20 15v13M23 15v13"
-    stroke="#7f1d1d"
-    stroke-width="0.9"
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" role="img" aria-label="Movie NaPi">
+  <!-- Solo el SVG de película (sin fondo / sin caja) -->
+  <rect
+    x="2"
+    y="4"
+    width="20"
+    height="16"
+    rx="2"
+    stroke="#FFFFFF"
+    stroke-width="2"
     stroke-linecap="round"
+    stroke-linejoin="round"
   />
-  <path d="M6 15h20v1.2H6V15z" fill="#991b1b" />
-  <!-- Montoncito de pochoclo -->
-  <ellipse cx="16" cy="13.5" rx="10.5" ry="6.2" fill="url(#pc-k)" />
-  <circle cx="10.5" cy="11.5" r="2.8" fill="#fde047" />
-  <circle cx="16" cy="9.2" r="3.4" fill="#fef9c3" />
-  <circle cx="21.5" cy="11.5" r="2.8" fill="#fde047" />
-  <circle cx="12.8" cy="14" r="2.2" fill="#facc15" />
-  <circle cx="19.2" cy="14" r="2.2" fill="#eab308" />
-  <circle cx="16" cy="15.2" r="2" fill="#ca8a04" opacity="0.35" />
+  <path
+    d="M7 4v16M17 4v16M2 9h5M17 9h5M2 15h5M17 15h5"
+    stroke="#FFFFFF"
+    stroke-width="2"
+    stroke-linecap="round"
+    stroke-linejoin="round"
+  />
 </svg>

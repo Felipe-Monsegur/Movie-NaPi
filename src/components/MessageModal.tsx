@@ -1,5 +1,7 @@
 import { createPortal } from 'react-dom';
+import type { ReactNode } from 'react';
 import { useTheme } from '../context/ThemeContext';
+import { IconCheck, IconInfo, IconWarning, IconX } from './icons/AppIcons';
 
 interface MessageModalProps {
   isOpen: boolean;
@@ -14,26 +16,29 @@ export default function MessageModal({ isOpen, onClose, title, message, type = '
 
   if (!isOpen) return null;
 
-  const typeStyles = {
+  const typeStyles: Record<
+    NonNullable<MessageModalProps['type']>,
+    { bg: string; border: string; icon: ReactNode }
+  > = {
     success: {
       bg: 'bg-green-600',
       border: 'border-green-500',
-      icon: '✓',
+      icon: <IconCheck size={28} className="w-7 h-7" />,
     },
     error: {
       bg: 'bg-red-600',
       border: 'border-red-500',
-      icon: '✕',
+      icon: <IconX size={28} className="w-7 h-7" />,
     },
     info: {
       bg: '',
       border: '',
-      icon: 'ℹ',
+      icon: <IconInfo size={28} className="w-7 h-7" />,
     },
     warning: {
       bg: 'bg-yellow-600',
       border: 'border-yellow-500',
-      icon: '⚠',
+      icon: <IconWarning size={28} className="w-7 h-7" />,
     },
   };
 
@@ -56,16 +61,17 @@ export default function MessageModal({ isOpen, onClose, title, message, type = '
       >
         <div className="p-4 sm:p-6">
           <div className="flex items-start gap-2 sm:gap-4">
-            <span className="text-2xl sm:text-3xl font-bold flex-shrink-0">{style.icon}</span>
+            <span className="flex-shrink-0 text-white opacity-95 mt-0.5">{style.icon}</span>
             <div className="flex-1 min-w-0">
               <h2 className="text-lg sm:text-xl font-bold text-white mb-1.5 sm:mb-2">{title}</h2>
               <div className="text-white whitespace-pre-wrap text-xs sm:text-sm">{message}</div>
             </div>
             <button
               onClick={onClose}
-              className="text-white hover:text-gray-200 text-xl sm:text-2xl font-bold flex-shrink-0"
+              className="text-white hover:text-gray-200 flex-shrink-0 p-0.5"
+              aria-label="Cerrar"
             >
-              ×
+              <IconX size={20} className="w-5 h-5" />
             </button>
           </div>
           <div className="mt-3 sm:mt-4 flex justify-end">
@@ -83,4 +89,3 @@ export default function MessageModal({ isOpen, onClose, title, message, type = '
     document.body
   );
 }
-

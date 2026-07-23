@@ -1,5 +1,6 @@
-import { useEffect } from 'react';
+import { useEffect, type ReactNode } from 'react';
 import { useTheme } from '../context/ThemeContext';
+import { IconCheck, IconInfo, IconWarning, IconX } from './icons/AppIcons';
 
 export type ToastType = 'success' | 'error' | 'info' | 'warning';
 
@@ -21,26 +22,29 @@ export default function Toast({ message, type, onClose, duration = 4000 }: Toast
     return () => clearTimeout(timer);
   }, [duration, onClose]);
 
-  const typeStyles = {
+  const typeStyles: Record<
+    ToastType,
+    { bg: string; border: string; icon: ReactNode }
+  > = {
     success: {
       bg: 'bg-green-600',
       border: 'border-green-500',
-      icon: '✓',
+      icon: <IconCheck size={22} className="w-[22px] h-[22px]" />,
     },
     error: {
       bg: 'bg-red-600',
       border: 'border-red-500',
-      icon: '✕',
+      icon: <IconX size={22} className="w-[22px] h-[22px]" />,
     },
     info: {
       bg: '',
       border: '',
-      icon: 'ℹ',
+      icon: <IconInfo size={22} className="w-[22px] h-[22px]" />,
     },
     warning: {
       bg: 'bg-yellow-600',
       border: 'border-yellow-500',
-      icon: '⚠',
+      icon: <IconWarning size={22} className="w-[22px] h-[22px]" />,
     },
   };
 
@@ -56,15 +60,15 @@ export default function Toast({ message, type, onClose, duration = 4000 }: Toast
           : undefined
       }
     >
-      <span className="text-2xl font-bold flex-shrink-0">{style.icon}</span>
+      <span className="flex-shrink-0 opacity-95">{style.icon}</span>
       <p className="flex-1 text-sm font-medium">{message}</p>
       <button
         onClick={onClose}
-        className="text-white hover:text-gray-200 text-xl font-bold flex-shrink-0 ml-2 transition-colors"
+        className="text-white hover:text-gray-200 flex-shrink-0 ml-2 transition-colors p-0.5"
+        aria-label="Cerrar"
       >
-        ×
+        <IconX size={18} className="w-[18px] h-[18px]" />
       </button>
     </div>
   );
 }
-

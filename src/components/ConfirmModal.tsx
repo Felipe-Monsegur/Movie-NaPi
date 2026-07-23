@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useTheme } from '../context/ThemeContext';
 import { hexToRgba } from '../utils/color';
+import { IconFilm } from './icons/AppIcons';
 
 interface ConfirmModalProps {
   isOpen: boolean;
@@ -23,7 +24,7 @@ export default function ConfirmModal({
   cancelText = 'Cancelar',
   type: _type = 'danger',
 }: ConfirmModalProps) {
-  const { theme, headerColor } = useTheme();
+  const { headerColor } = useTheme();
   const [pending, setPending] = useState(false);
 
   useEffect(() => {
@@ -60,9 +61,7 @@ export default function ConfirmModal({
       role="presentation"
     >
       <div
-        className={`relative w-full max-w-[420px] rounded-2xl shadow-2xl overflow-hidden transition-transform ${
-          theme === 'dark' ? 'bg-gray-900 ring-1 ring-white/10' : 'bg-white ring-1 ring-gray-200'
-        }`}
+        className="ui-panel relative w-full max-w-[420px] overflow-hidden"
         onClick={(e) => e.stopPropagation()}
         role="dialog"
         aria-modal="true"
@@ -73,30 +72,24 @@ export default function ConfirmModal({
 
         <div className="p-6 sm:p-8">
           <div
-            className="mx-auto mb-5 flex h-14 w-14 items-center justify-center rounded-2xl"
+            className="mx-auto mb-5 flex h-14 w-14 items-center justify-center rounded-panel text-[var(--header-color)]"
             style={{
-              backgroundColor: hexToRgba(headerColor, theme === 'dark' ? 0.15 : 0.12),
-              boxShadow: `0 0 0 8px ${hexToRgba(headerColor, 0.2)}`,
+              backgroundColor: hexToRgba(headerColor, 0.15),
+              boxShadow: `0 0 0 8px ${hexToRgba(headerColor, 0.18)}`,
             }}
           >
-            <span className="text-3xl" aria-hidden>
-              🎬
-            </span>
+            <IconFilm size={28} className="w-7 h-7" />
           </div>
 
           <h3
             id="confirm-modal-title"
-            className={`text-center text-xl font-bold tracking-tight sm:text-2xl ${
-              theme === 'dark' ? 'text-white' : 'text-gray-900'
-            }`}
+            className="text-center text-xl font-bold tracking-tight sm:text-2xl text-ink"
           >
             {title}
           </h3>
           <p
             id="confirm-modal-desc"
-            className={`mt-3 text-center text-sm leading-relaxed sm:text-base ${
-              theme === 'dark' ? 'text-gray-400' : 'text-gray-600'
-            }`}
+            className="mt-3 text-center text-sm leading-relaxed sm:text-base text-ink-muted"
           >
             {message}
           </p>
@@ -106,11 +99,7 @@ export default function ConfirmModal({
               type="button"
               onClick={onClose}
               disabled={pending}
-              className={`w-full rounded-xl px-5 py-3 text-sm font-semibold transition-colors sm:w-auto ${
-                theme === 'dark'
-                  ? 'bg-gray-800 text-gray-200 hover:bg-gray-700 disabled:opacity-50'
-                  : 'bg-gray-100 text-gray-800 hover:bg-gray-200 disabled:opacity-50'
-              }`}
+              className="w-full rounded-control px-5 py-3 text-sm font-semibold transition-colors sm:w-auto bg-surface-2 text-ink hover:bg-surface-3 border border-line disabled:opacity-50"
             >
               {cancelText}
             </button>
@@ -118,7 +107,7 @@ export default function ConfirmModal({
               type="button"
               onClick={handleConfirm}
               disabled={pending}
-              className="w-full rounded-xl px-5 py-3 text-sm font-semibold shadow-lg sm:w-auto btn-header-primary"
+              className="w-full rounded-control px-5 py-3 text-sm font-semibold shadow-lg sm:w-auto btn-header-primary"
             >
               {pending ? 'Un momento…' : confirmText}
             </button>

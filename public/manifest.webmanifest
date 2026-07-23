@@ -1,0 +1,29 @@
+{
+  "name": "Movie NaPi",
+  "short_name": "Movie NaPi",
+  "description": "Lista y puntuaciones de películas y series",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#131924",
+  "theme_color": "#131924",
+  "icons": [
+    {
+      "src": "/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/apple-touch-icon.png",
+      "sizes": "180x180",
+      "type": "image/png",
+      "purpose": "any"
+    }
+  ]
+}

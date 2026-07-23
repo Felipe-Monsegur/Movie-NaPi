@@ -4,6 +4,7 @@ import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
 import { logout } from '../services/authService';
 import ProfileModal from './ProfileModal';
+import { IconChart, IconList, IconStar } from './icons/AppIcons';
 
 interface LayoutProps {
   children: ReactNode;
@@ -13,7 +14,7 @@ export default function Layout({ children }: LayoutProps) {
   const location = useLocation();
   const navigate = useNavigate();
   const { user } = useAuth();
-  const { theme, toggleTheme, headerColor, headerTitle } = useTheme();
+  const { theme, toggleTheme, headerTitle } = useTheme();
   const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
 
   const handleLogout = async () => {
@@ -26,30 +27,30 @@ export default function Layout({ children }: LayoutProps) {
   };
 
   const navItems = [
-    { path: '/', label: 'Por ver', icon: '📋' },
-    { path: '/puntuar', label: 'Puntuar', icon: '⭐' },
-    { path: '/panel', label: 'Panel', icon: '📊' },
+    { path: '/', label: 'Por ver', Icon: IconList },
+    { path: '/puntuar', label: 'Puntuar', Icon: IconStar },
+    { path: '/panel', label: 'Panel', Icon: IconChart },
   ];
 
   return (
-    <div className={`min-h-screen ${theme === 'dark' ? 'bg-gray-900' : 'bg-gray-50'}`}>
-      <header className="text-white shadow-lg" style={{ backgroundColor: headerColor }}>
+    <div className="min-h-screen bg-transparent text-ink">
+      <header className="text-white shadow-lg ui-header-gradient">
         <div className="container mx-auto px-2 sm:px-4 py-3 sm:py-4">
           <div className="flex items-center justify-between">
-            <h1 className="text-lg sm:text-2xl font-bold flex items-center gap-2">
-              <span className="text-2xl sm:text-3xl" aria-hidden>
-                🎬
-              </span>
-              {headerTitle.trim() || '🍿 Movie NaPi'}
+            <h1 className="text-lg sm:text-2xl font-bold flex items-center gap-2.5 sm:gap-3 tracking-tight">
+              <img
+                src="/logo.png"
+                alt=""
+                width={48}
+                height={48}
+                className="w-10 h-10 sm:w-12 sm:h-12 shrink-0 rounded-md object-cover"
+              />
+              {headerTitle.trim() || 'Movie NaPi'}
             </h1>
             <div className="flex items-center gap-2 sm:gap-3">
               <button
                 onClick={toggleTheme}
-                className={`px-2 sm:px-3 py-1.5 sm:py-2 rounded-lg flex items-center gap-1.5 text-xs sm:text-sm transition-colors ${
-                  theme === 'dark'
-                    ? 'bg-white/10 text-white hover:bg-white/20'
-                    : 'bg-white/20 text-white hover:bg-white/30'
-                }`}
+                className="px-2 sm:px-3 py-1.5 sm:py-2 rounded-control flex items-center gap-1.5 text-xs sm:text-sm transition-colors bg-white/10 text-white hover:bg-white/20"
                 title={theme === 'dark' ? 'Cambiar a modo claro' : 'Cambiar a modo oscuro'}
               >
                 {theme === 'dark' ? (
@@ -140,7 +141,7 @@ export default function Layout({ children }: LayoutProps) {
               </button>
               <button
                 onClick={() => setIsProfileModalOpen(true)}
-                className="px-2 sm:px-3 py-1.5 sm:py-2 rounded-lg bg-white/10 hover:bg-white/20 transition-colors flex items-center gap-1.5 text-white"
+                className="px-2 sm:px-3 py-1.5 sm:py-2 rounded-control bg-white/10 hover:bg-white/20 transition-colors flex items-center gap-1.5 text-white"
                 title="Mi perfil"
               >
                 <svg
@@ -161,32 +162,43 @@ export default function Layout({ children }: LayoutProps) {
               </button>
               <button
                 onClick={handleLogout}
-                className="px-2 sm:px-3 py-1.5 sm:py-2 rounded-lg bg-white/10 hover:bg-white/20 transition-colors text-xs sm:text-sm text-white font-medium"
+                className="p-2 sm:p-2.5 rounded-control bg-white/10 hover:bg-white/20 transition-colors text-white inline-flex items-center justify-center"
+                title="Cerrar sesión"
+                aria-label="Cerrar sesión"
               >
-                Salir
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  className="w-4 h-4 sm:w-5 sm:h-5"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  aria-hidden
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    d="M15.75 9V5.25A2.25 2.25 0 0013.5 3h-6a2.25 2.25 0 00-2.25 2.25v13.5A2.25 2.25 0 007.5 21h6a2.25 2.25 0 002.25-2.25V15M18.75 15l3-3m0 0l-3-3m3 3H9"
+                  />
+                </svg>
               </button>
             </div>
           </div>
         </div>
       </header>
 
-      <nav
-        className={`${theme === 'dark' ? 'bg-gray-800' : 'bg-white'} shadow-md sticky top-0 z-10`}
-        style={{ borderBottom: `2px solid ${headerColor}` }}
-      >
+      <nav className="ui-nav-glass sticky top-0 z-10">
         <div className="container mx-auto px-2 sm:px-4">
-          <div className="flex flex-wrap gap-1 sm:gap-2 py-2 sm:py-3">
+          <div className="flex flex-wrap gap-1.5 sm:gap-2 py-2 sm:py-2.5">
             {navItems.map((item) => (
               <Link
                 key={item.path}
                 to={item.path}
-                className={`px-2 sm:px-4 py-1.5 sm:py-2 rounded-lg transition-colors text-xs sm:text-sm ${
-                  location.pathname === item.path
-                    ? `${theme === 'dark' ? 'bg-gray-700 text-white' : 'bg-gray-100 text-black'} font-semibold`
-                    : `${theme === 'dark' ? 'text-gray-300 hover:bg-gray-700' : 'text-black hover:bg-gray-100'}`
+                className={`inline-flex items-center gap-1.5 px-3.5 sm:px-4 py-1.5 sm:py-2 ui-tab ${
+                  location.pathname === item.path ? 'ui-tab-active' : ''
                 }`}
               >
-                <span className="mr-1 sm:mr-2">{item.icon}</span>
+                <item.Icon className="w-[17px] h-[17px] sm:w-[18px] sm:h-[18px] shrink-0" size={17} />
                 {item.label}
               </Link>
             ))}

@@ -4,6 +4,10 @@ import { saveUserTheme, getUserSettings, saveUserSettings } from '../services/fi
 
 type Theme = 'dark' | 'light';
 
+/** Acentos Finanzas 11 */
+export const DEFAULT_HEADER_COLOR_DARK = '#A80000';
+export const DEFAULT_HEADER_COLOR_LIGHT = '#1e3a8a';
+
 /** Color por defecto de la barrita en “Por ver” (amarillo tipo tarjeta) */
 export const DEFAULT_LIST_ACCENT = '#eab308';
 
@@ -29,11 +33,11 @@ interface ThemeContextType {
 const ThemeContext = createContext<ThemeContextType>({
   theme: 'dark',
   toggleTheme: () => {},
-  headerColor: '#5b21b6',
-  headerTitle: '🍿 Movie NaPi',
-  loginBgColor: '#5b21b6',
-  headerColorDark: '#5b21b6',
-  headerColorLight: '#7c3aed',
+  headerColor: DEFAULT_HEADER_COLOR_DARK,
+  headerTitle: 'Movie NaPi',
+  loginBgColor: DEFAULT_HEADER_COLOR_DARK,
+  headerColorDark: DEFAULT_HEADER_COLOR_DARK,
+  headerColorLight: DEFAULT_HEADER_COLOR_LIGHT,
   updateHeaderColorDark: async () => {},
   updateHeaderColorLight: async () => {},
   updateHeaderTitle: async () => {},
@@ -58,21 +62,21 @@ export const ThemeProvider = ({ children }: { children: ReactNode }) => {
   
   const [theme, setTheme] = useState<Theme>(getInitialTheme);
   const [loading, setLoading] = useState(!!user); // Solo loading si hay usuario
-  const [headerColorDark, setHeaderColorDark] = useState<string>('#5b21b6');
-  const [headerColorLight, setHeaderColorLight] = useState<string>('#7c3aed');
-  const [headerTitle, setHeaderTitle] = useState<string>('🍿 Movie NaPi');
+  const [headerColorDark, setHeaderColorDark] = useState<string>(DEFAULT_HEADER_COLOR_DARK);
+  const [headerColorLight, setHeaderColorLight] = useState<string>(DEFAULT_HEADER_COLOR_LIGHT);
+  const [headerTitle, setHeaderTitle] = useState<string>('Movie NaPi');
   const [displayName, setDisplayName] = useState<string>('');
   const [listAccentColor, setListAccentColor] = useState<string>(DEFAULT_LIST_ACCENT);
 
   // Color del header según el tema actual (calculado dinámicamente)
   const headerColor = theme === 'dark' ? headerColorDark : headerColorLight;
   
-  // Colores según el tema
-  const loginBgColor = theme === 'dark' ? '#5b21b6' : '#7c3aed';
+  // Acento de login / pantallas auth (mismo que header del tema)
+  const loginBgColor = headerColor;
 
   useEffect(() => {
     const t = headerTitle.trim();
-    document.title = t || '🍿 Movie NaPi';
+    document.title = t || 'Movie NaPi';
   }, [headerTitle]);
 
   // Cargar tema y preferencias del usuario al iniciar sesión

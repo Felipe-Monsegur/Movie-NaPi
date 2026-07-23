@@ -8,6 +8,7 @@ import { Movie } from '../types';
 import { hexToRgba } from '../utils/color';
 import { clampScoreToHalfSteps, formatScoreDisplay } from '../utils/scoreFormat';
 import { scoreToDisplayColor } from '../utils/scoreColor';
+import { IconSearch } from '../components/icons/AppIcons';
 
 function sortByTitle(a: Movie, b: Movie) {
   return a.title.localeCompare(b.title, 'es', { sensitivity: 'base' });
@@ -118,17 +119,11 @@ export default function MovieRate() {
   };
 
   const selected = movies.find((m) => m.id === movieId);
-  const card = theme === 'dark' ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200';
-  const label = theme === 'dark' ? 'text-gray-300' : 'text-gray-700';
-  const input =
-    theme === 'dark'
-      ? 'border-gray-600 bg-gray-700 text-white'
-      : 'border-gray-300 bg-white text-gray-800';
+  const card = 'bg-surface border-line shadow-panel';
+  const label = 'text-ink-muted ui-label text-xs';
+  const input = 'border-line bg-surface-2 text-ink rounded-control';
 
-  const listRowInactive =
-    theme === 'dark'
-      ? 'text-gray-200 hover:bg-gray-700/80 border-gray-700'
-      : 'text-gray-800 hover:bg-gray-100 border-gray-100';
+  const listRowInactive = 'text-ink hover:bg-surface-2/80 border-line';
 
   if (loadingList) {
     return (
@@ -166,10 +161,10 @@ export default function MovieRate() {
           </label>
           <div className="relative">
             <span
-              className={`pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-lg ${theme === 'dark' ? 'text-gray-500' : 'text-gray-400'}`}
+              className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-ink-muted"
               aria-hidden
             >
-              🔍
+              <IconSearch size={18} className="w-[18px] h-[18px]" />
             </span>
             <input
               id="movie-search"

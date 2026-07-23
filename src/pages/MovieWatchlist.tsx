@@ -82,12 +82,9 @@ export default function MovieWatchlist() {
     }
   };
 
-  const card = theme === 'dark' ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200';
-  const label = theme === 'dark' ? 'text-gray-300' : 'text-gray-700';
-  const input =
-    theme === 'dark'
-      ? 'border-gray-600 bg-gray-700 text-white'
-      : 'border-gray-300 bg-white text-gray-800';
+  const card = 'bg-surface border-line shadow-panel';
+  const label = 'text-ink-muted ui-label text-xs';
+  const input = 'border-line bg-surface-2 text-ink rounded-control';
 
   return (
     <div className="max-w-3xl mx-auto space-y-6">
@@ -154,11 +151,7 @@ export default function MovieWatchlist() {
             {movies.map((m) => (
               <li
                 key={m.id}
-                className={`flex overflow-hidden rounded-xl border ${
-                  theme === 'dark'
-                    ? 'border-gray-700 bg-gray-800/70 hover:bg-gray-800'
-                    : 'border-gray-200 bg-white shadow-sm hover:bg-gray-50/80'
-                } transition-colors`}
+                className="flex overflow-hidden rounded-panel border border-line bg-surface/90 hover:bg-surface-2 transition-colors"
               >
                 <div
                   className="w-1.5 sm:w-2 shrink-0 self-stretch min-h-[4.5rem] sm:min-h-[3.25rem]"
@@ -184,11 +177,7 @@ export default function MovieWatchlist() {
                     <button
                       type="button"
                       onClick={() => setMovieToDelete(m)}
-                      className={`px-3 py-1.5 rounded-lg text-sm ${
-                        theme === 'dark'
-                          ? 'bg-gray-700 text-gray-200 hover:bg-gray-600'
-                          : 'bg-gray-200 text-gray-800 hover:bg-gray-300'
-                      }`}
+                      className="px-3 py-1.5 rounded-control text-sm bg-surface-2 text-ink hover:bg-surface-3 border border-line"
                     >
                       Quitar
                     </button>
