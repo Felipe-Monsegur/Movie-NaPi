@@ -76,20 +76,22 @@ export default function Login() {
     <div className="min-h-screen flex items-center justify-center px-4">
       <div className="ui-panel p-6 sm:p-8 w-full max-w-md">
         <div className="flex items-center justify-between mb-6 gap-3">
-          <h1 className="text-3xl font-bold text-ink tracking-tight flex items-center gap-3">
+          <h1 className="min-w-0 flex-1 text-2xl sm:text-3xl font-bold text-ink tracking-tight flex items-center gap-2.5 sm:gap-3">
             <img
               src="/logo.png"
               alt=""
               width={48}
               height={48}
-              className="w-12 h-12 shrink-0 rounded-md object-cover"
+              className="w-10 h-10 sm:w-12 sm:h-12 shrink-0 rounded-md object-cover"
             />
-            Movie NaPi
+            <span className="leading-none whitespace-nowrap">Movie NaPi</span>
           </h1>
           <button
+            type="button"
             onClick={toggleTheme}
-            className="px-3 py-2 rounded-control flex items-center gap-2 text-xs transition-colors bg-surface-2 text-ink hover:bg-surface-3 border border-line"
+            className="shrink-0 p-2.5 rounded-control inline-flex items-center justify-center transition-colors bg-surface-2 text-ink hover:bg-surface-3 border border-line"
             title={theme === 'dark' ? 'Cambiar a modo claro' : 'Cambiar a modo oscuro'}
+            aria-label={theme === 'dark' ? 'Cambiar a modo claro' : 'Cambiar a modo oscuro'}
           >
             {theme === 'dark' ? (
               <svg
@@ -98,7 +100,8 @@ export default function Login() {
                 width="32"
                 height="32"
                 viewBox="0 0 24 24"
-                className="w-4 h-4"
+                className="w-5 h-5"
+                aria-hidden
               >
                 <path
                   fill="none"
@@ -125,7 +128,8 @@ export default function Login() {
                 width="32"
                 height="32"
                 viewBox="0 0 24 24"
-                className="w-4 h-4"
+                className="w-5 h-5"
+                aria-hidden
               >
                 <g fill="none" stroke="currentColor" strokeLinecap="round" strokeWidth="2">
                   <path
@@ -177,7 +181,6 @@ export default function Login() {
                 </g>
               </svg>
             )}
-            <span>{theme === 'dark' ? 'Modo oscuro' : 'Modo claro'}</span>
           </button>
         </div>
 
