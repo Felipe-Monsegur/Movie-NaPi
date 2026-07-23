@@ -66,6 +66,16 @@ export function IconChart(props: IconProps) {
   );
 }
 
+/** Lista de vistas (catálogo) */
+export function IconCatalog(props: IconProps) {
+  return (
+    <svg {...baseProps(props)}>
+      <rect x="3" y="4" width="18" height="16" rx="2" {...stroke} />
+      <path d="M7 8h10M7 12h10M7 16h6" {...stroke} />
+    </svg>
+  );
+}
+
 /** Buscar */
 export function IconSearch(props: IconProps) {
   return (

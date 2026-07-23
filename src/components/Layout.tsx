@@ -4,7 +4,7 @@ import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
 import { logout } from '../services/authService';
 import ProfileModal from './ProfileModal';
-import { IconChart, IconList, IconStar } from './icons/AppIcons';
+import { IconCatalog, IconChart, IconList, IconStar } from './icons/AppIcons';
 
 interface LayoutProps {
   children: ReactNode;
@@ -29,6 +29,7 @@ export default function Layout({ children }: LayoutProps) {
   const navItems = [
     { path: '/', label: 'Por ver', Icon: IconList },
     { path: '/puntuar', label: 'Puntuar', Icon: IconStar },
+    { path: '/lista', label: 'Lista', Icon: IconCatalog },
     { path: '/panel', label: 'Panel', Icon: IconChart },
   ];
 

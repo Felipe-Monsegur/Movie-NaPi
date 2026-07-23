@@ -61,7 +61,6 @@ export const ThemeProvider = ({ children }: { children: ReactNode }) => {
   };
   
   const [theme, setTheme] = useState<Theme>(getInitialTheme);
-  const [loading, setLoading] = useState(!!user); // Solo loading si hay usuario
   const [headerColorDark, setHeaderColorDark] = useState<string>(DEFAULT_HEADER_COLOR_DARK);
   const [headerColorLight, setHeaderColorLight] = useState<string>(DEFAULT_HEADER_COLOR_LIGHT);
   const [headerTitle, setHeaderTitle] = useState<string>('Movie NaPi');
@@ -135,7 +134,6 @@ export const ThemeProvider = ({ children }: { children: ReactNode }) => {
             setTheme(localTheme);
           }
         }
-        setLoading(false);
       } else {
         setDisplayName('');
         setListAccentColor(DEFAULT_LIST_ACCENT);
@@ -143,7 +141,6 @@ export const ThemeProvider = ({ children }: { children: ReactNode }) => {
         if (savedTheme === 'dark' || savedTheme === 'light') {
           setTheme(savedTheme);
         }
-        setLoading(false);
       }
     };
 
@@ -261,10 +258,6 @@ export const ThemeProvider = ({ children }: { children: ReactNode }) => {
   useEffect(() => {
     document.documentElement.style.setProperty('--header-color', headerColor);
   }, [headerColor]);
-
-  if (loading) {
-    return null; // O un loader si prefieres
-  }
 
   return (
     <ThemeContext.Provider value={{ 

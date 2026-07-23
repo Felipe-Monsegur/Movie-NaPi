@@ -3,12 +3,13 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
 import { useToast } from '../context/ToastContext';
-import { getMovies, getMyRating, upsertRating } from '../services/firebaseService';
-import { Movie } from '../types';
+import { useMoviesData } from '../context/MoviesDataContext';
+import { upsertRating } from '../services/firebaseService';
 import { hexToRgba } from '../utils/color';
 import { clampScoreToHalfSteps, formatScoreDisplay } from '../utils/scoreFormat';
 import { scoreToDisplayColor } from '../utils/scoreColor';
 import { IconSearch } from '../components/icons/AppIcons';
+import type { Movie } from '../types';
 
 function sortByTitle(a: Movie, b: Movie) {
   return a.title.localeCompare(b.title, 'es', { sensitivity: 'base' });
@@ -19,37 +20,24 @@ export default function MovieRate() {
   const { user } = useAuth();
   const { theme, displayName, headerColor } = useTheme();
   const { showToast } = useToast();
+  const { movies, ratings, initialLoading, refreshing, refresh } = useMoviesData();
   const [searchParams] = useSearchParams();
   const paramMovieId = searchParams.get('pelicula') || '';
 
-  const [movies, setMovies] = useState<Movie[]>([]);
   const [movieId, setMovieId] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
   const [score, setScore] = useState(7);
   const [opinion, setOpinion] = useState('');
-  const [loadingList, setLoadingList] = useState(true);
-  const [loadingRating, setLoadingRating] = useState(false);
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
-    const run = async () => {
-      setLoadingList(true);
-      try {
-        const list = await getMovies();
-        setMovies(list);
-        setMovieId((prev) => {
-          if (paramMovieId && list.some((m) => m.id === paramMovieId)) return paramMovieId;
-          if (prev && list.some((m) => m.id === prev)) return prev;
-          return '';
-        });
-      } catch {
-        showToast('No se pudo cargar la lista', 'error');
-      } finally {
-        setLoadingList(false);
-      }
-    };
-    run();
-  }, [paramMovieId]);
+    if (!movies.length) return;
+    setMovieId((prev) => {
+      if (paramMovieId && movies.some((m) => m.id === paramMovieId)) return paramMovieId;
+      if (prev && movies.some((m) => m.id === prev)) return prev;
+      return '';
+    });
+  }, [movies, paramMovieId]);
 
   const filteredMovies = useMemo(() => {
     const q = searchQuery.trim().toLowerCase();
@@ -61,34 +49,19 @@ export default function MovieRate() {
 
   useEffect(() => {
     if (!user || !movieId) {
+      setScore(7);
       setOpinion('');
       return;
     }
-    let cancelled = false;
-    const loadRating = async () => {
-      setLoadingRating(true);
-      try {
-        const r = await getMyRating(movieId, user.uid);
-        if (!cancelled) {
-          if (r) {
-            setScore(clampScoreToHalfSteps(r.score));
-            setOpinion(r.opinion);
-          } else {
-            setScore(7);
-            setOpinion('');
-          }
-        }
-      } catch {
-        if (!cancelled) showToast('No se pudo cargar tu valoración', 'error');
-      } finally {
-        if (!cancelled) setLoadingRating(false);
-      }
-    };
-    loadRating();
-    return () => {
-      cancelled = true;
-    };
-  }, [movieId, user?.uid]);
+    const mine = ratings.find((r) => r.movieId === movieId && r.userId === user.uid);
+    if (mine) {
+      setScore(clampScoreToHalfSteps(mine.score));
+      setOpinion(mine.opinion);
+    } else {
+      setScore(7);
+      setOpinion('');
+    }
+  }, [movieId, user?.uid, ratings]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -110,6 +83,7 @@ export default function MovieRate() {
         opinion,
       });
       showToast('Valoración guardada', 'info');
+      void refresh();
       navigate('/panel');
     } catch {
       showToast('Error al guardar', 'error');
@@ -125,10 +99,10 @@ export default function MovieRate() {
 
   const listRowInactive = 'text-ink hover:bg-surface-2/80 border-line';
 
-  if (loadingList) {
+  if (initialLoading) {
     return (
-      <div className={`text-center py-12 ${theme === 'dark' ? 'text-gray-400' : 'text-gray-500'}`}>
-        Cargando…
+      <div className="flex justify-center py-12">
+        <span className="h-6 w-6 rounded-full border-2 border-line border-t-[var(--header-color)] animate-spin" />
       </div>
     );
   }
@@ -145,13 +119,21 @@ export default function MovieRate() {
 
   return (
     <div className="max-w-xl mx-auto space-y-6">
-      <div>
-        <h2 className={`text-xl sm:text-2xl font-bold ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>
-          Puntuar y opinar
-        </h2>
-        <p className={`mt-1 text-sm ${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}`}>
-          Buscá el título (película o serie), tocá para elegirlo y después cargá nota y opinión.
-        </p>
+      <div className="flex items-start justify-between gap-3">
+        <div>
+          <h2 className={`text-xl sm:text-2xl font-bold ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>
+            Puntuar y opinar
+          </h2>
+          <p className={`mt-1 text-sm ${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}`}>
+            Buscá el título (película o serie), tocá para elegirlo y después cargá nota y opinión.
+          </p>
+        </div>
+        {refreshing && (
+          <span
+            className="mt-1 h-4 w-4 shrink-0 rounded-full border-2 border-line border-t-[var(--header-color)] animate-spin"
+            aria-label="Actualizando"
+          />
+        )}
       </div>
 
       <form onSubmit={handleSubmit} className={`rounded-xl border p-4 sm:p-6 space-y-5 ${card}`}>
@@ -262,7 +244,7 @@ export default function MovieRate() {
             onChange={(e) => setScore(clampScoreToHalfSteps(Number(e.target.value)))}
             className="w-full mt-2"
             style={{ accentColor: scoreToDisplayColor(score, theme) }}
-            disabled={loadingRating || !movieId}
+            disabled={!movieId}
           />
           <div className="flex justify-between text-xs text-gray-500 mt-1">
             <span>1</span>
@@ -279,16 +261,16 @@ export default function MovieRate() {
             rows={5}
             className={`w-full border rounded-lg px-3 py-2 focus:outline-none focus-ring-header resize-y min-h-[120px] ${input}`}
             placeholder="Qué te pareció, sin spoilers o con spoilers avisando…"
-            disabled={loadingRating || !movieId}
+            disabled={!movieId}
           />
         </div>
 
         <button
           type="submit"
-          disabled={saving || loadingRating || !movieId}
+          disabled={saving || !movieId}
           className="w-full py-2.5 rounded-lg btn-header-primary font-medium"
         >
-          {saving ? 'Guardando…' : loadingRating ? 'Cargando…' : 'Guardar mi valoración'}
+          {saving ? 'Guardando…' : 'Guardar mi valoración'}
         </button>
       </form>
     </div>

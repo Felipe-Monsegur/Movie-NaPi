@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useTheme } from '../context/ThemeContext';
 import ConfirmModal from '../components/ConfirmModal';
 import EditMovieTitleModal from '../components/EditMovieTitleModal';
@@ -8,7 +8,8 @@ import { scoreToBadgeStyle, scoreToDisplayColor } from '../utils/scoreColor';
 import { formatScoreDisplay } from '../utils/scoreFormat';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
-import { deleteMovie, getMovies, getAllRatings, getDisplayNamesForUserIds } from '../services/firebaseService';
+import { useMoviesData } from '../context/MoviesDataContext';
+import { deleteMovie, getDisplayNamesForUserIds } from '../services/firebaseService';
 import { Movie, MovieRating } from '../types';
 
 function average(nums: number[]): number | null {
@@ -43,37 +44,30 @@ export default function ScoresPanel() {
   const { user } = useAuth();
   const { theme } = useTheme();
   const { showToast } = useToast();
-  const [movies, setMovies] = useState<Movie[]>([]);
-  const [ratings, setRatings] = useState<MovieRating[]>([]);
+  const { movies, ratings, initialLoading, refreshing, refresh } = useMoviesData();
   const [nameByUid, setNameByUid] = useState<Record<string, string>>({});
-  const [loading, setLoading] = useState(true);
   const [deleteTarget, setDeleteTarget] = useState<Movie | null>(null);
   const [editTarget, setEditTarget] = useState<Movie | null>(null);
   const [panelSearchQuery, setPanelSearchQuery] = useState('');
 
-  const loadPanel = useCallback(async () => {
-    if (!user?.uid) {
-      setLoading(false);
+  useEffect(() => {
+    const uids = [...new Set(ratings.map((x) => x.userId).filter(Boolean))];
+    if (!uids.length) {
+      setNameByUid({});
       return;
     }
-    setLoading(true);
-    try {
-      const [m, r] = await Promise.all([getMovies(), getAllRatings()]);
-      const uids = [...new Set(r.map((x) => x.userId).filter(Boolean))];
-      const names = await getDisplayNamesForUserIds(uids);
-      setMovies(m);
-      setRatings(r);
-      setNameByUid(names);
-    } catch {
-      showToast('No se pudo cargar el panel', 'error');
-    } finally {
-      setLoading(false);
-    }
-  }, [showToast, user?.uid]);
-
-  useEffect(() => {
-    loadPanel();
-  }, [loadPanel]);
+    let cancelled = false;
+    getDisplayNamesForUserIds(uids)
+      .then((names) => {
+        if (!cancelled) setNameByUid(names);
+      })
+      .catch(() => {
+        /* los nombres en cada rating alcanzan como fallback */
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [ratings]);
 
   const byMovie = useMemo(() => {
     const map = new Map<string, MovieRating[]>();
@@ -106,10 +100,10 @@ export default function ScoresPanel() {
   const th = 'text-ink-muted ui-label text-[0.65rem]';
   const td = 'text-ink';
 
-  if (loading) {
+  if (initialLoading) {
     return (
-      <div className={`text-center py-12 ${theme === 'dark' ? 'text-gray-400' : 'text-gray-500'}`}>
-        Cargando…
+      <div className="flex justify-center py-12">
+        <span className="h-6 w-6 rounded-full border-2 border-line border-t-[var(--header-color)] animate-spin" />
       </div>
     );
   }
@@ -126,45 +120,54 @@ export default function ScoresPanel() {
 
   return (
     <div className="max-w-4xl mx-auto space-y-6">
+      <div className="flex items-start justify-between gap-3">
+        <div>
+          <h2 className={`text-xl sm:text-2xl font-bold ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>
+            Panel de puntuaciones
+          </h2>
+          <p className={`mt-1 text-sm ${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}`}>
+            Hasta que <strong>vos</strong> no puntúes un título, la nota y la opinión de los demás y el promedio se muestran
+            como <strong>?</strong> (vos siempre ves la tuya). Orden: más reciente valorado primero. Lápiz: editar nombre;
+            papelera: borrar.
+          </p>
+        </div>
+        {refreshing && (
+          <span
+            className="mt-1 h-4 w-4 shrink-0 rounded-full border-2 border-line border-t-[var(--header-color)] animate-spin"
+            aria-label="Actualizando"
+          />
+        )}
+      </div>
+
       <div>
-        <h2 className={`text-xl sm:text-2xl font-bold ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>
-          Panel de puntuaciones
-        </h2>
-        <p className={`mt-1 text-sm ${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}`}>
-          Hasta que <strong>vos</strong> no puntúes un título, la nota y la opinión de los demás y el promedio se muestran
-          como <strong>?</strong> (vos siempre ves la tuya). Orden: más reciente valorado primero. Lápiz: editar nombre;
-          papelera: borrar.
-        </p>
-        <div className="mt-4">
-          <label htmlFor="panel-search" className={`block text-sm font-medium mb-1 ${label}`}>
-            Buscar por título
-          </label>
-          <div className="relative max-w-md">
-            <span
-              className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-ink-muted"
-              aria-hidden
-            >
-              <IconSearch size={18} className="w-[18px] h-[18px]" />
-            </span>
-            <input
-              id="panel-search"
-              type="search"
-              value={panelSearchQuery}
-              onChange={(e) => setPanelSearchQuery(e.target.value)}
-              placeholder="Filtrar películas y series…"
-              autoComplete="off"
-              className={`w-full border rounded-lg pl-10 pr-3 py-2.5 focus:outline-none focus-ring-header ${input}`}
-            />
-          </div>
+        <label htmlFor="panel-search" className={`block text-sm font-medium mb-1 ${label}`}>
+          Buscar por título
+        </label>
+        <div className="relative max-w-md">
+          <span
+            className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-ink-muted"
+            aria-hidden
+          >
+            <IconSearch size={18} className="w-[18px] h-[18px]" />
+          </span>
+          <input
+            id="panel-search"
+            type="search"
+            value={panelSearchQuery}
+            onChange={(e) => setPanelSearchQuery(e.target.value)}
+            placeholder="Filtrar películas y series…"
+            autoComplete="off"
+            className={`w-full border rounded-lg pl-10 pr-3 py-2.5 focus:outline-none focus-ring-header ${input}`}
+          />
         </div>
       </div>
 
       <EditMovieTitleModal
         movie={editTarget}
         onClose={() => setEditTarget(null)}
-        onSaved={(movieId, newTitle) => {
-          setMovies((prev) => prev.map((m) => (m.id === movieId ? { ...m, title: newTitle } : m)));
+        onSaved={async () => {
           showToast('Título actualizado', 'success');
+          await refresh();
         }}
       />
 
@@ -175,9 +178,8 @@ export default function ScoresPanel() {
           if (!deleteTarget) return;
           try {
             await deleteMovie(deleteTarget.id);
-            setMovies((prev) => prev.filter((m) => m.id !== deleteTarget.id));
-            setRatings((prev) => prev.filter((r) => r.movieId !== deleteTarget.id));
             showToast('Título eliminado', 'success');
+            await refresh();
           } catch {
             showToast('No se pudo eliminar', 'error');
           }
