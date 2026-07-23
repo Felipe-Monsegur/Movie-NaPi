@@ -4,7 +4,7 @@ REM Requiere: npm install, firebase login, .firebaserc con proyecto movie-napi
 
 cd /d "%~dp0"
 echo ========================================
-echo   Movie NaPi — publicar en Firebase
+echo   Movie NaPi - publicar en Firebase
 echo   Proyecto: movie-napi
 echo ========================================
 echo.

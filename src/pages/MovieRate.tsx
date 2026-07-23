@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState, type ReactNode } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
@@ -15,12 +15,57 @@ function sortByTitle(a: Movie, b: Movie) {
   return a.title.localeCompare(b.title, 'es', { sensitivity: 'base' });
 }
 
+function MoviePickSection({
+  title,
+  emptyText,
+  movies,
+  renderRow,
+  theme,
+}: {
+  title: string;
+  emptyText: string;
+  movies: Movie[];
+  renderRow: (m: Movie) => ReactNode;
+  theme: string;
+}) {
+  return (
+    <div
+      className={`rounded-lg border overflow-hidden ${
+        theme === 'dark' ? 'border-gray-600 bg-gray-900/40' : 'border-gray-200 bg-gray-50/80'
+      }`}
+    >
+      <p
+        className={`px-3 py-1.5 text-[0.65rem] font-bold ui-label border-b ${
+          theme === 'dark'
+            ? 'bg-gray-800/95 text-gray-400 border-gray-700'
+            : 'bg-gray-100/95 text-gray-500 border-gray-200'
+        }`}
+      >
+        {title}
+      </p>
+      {movies.length === 0 ? (
+        <p className={`px-3 py-3 text-sm ${theme === 'dark' ? 'text-gray-500' : 'text-gray-500'}`}>
+          {emptyText}
+        </p>
+      ) : (
+        <ul
+          className="max-h-40 sm:max-h-48 overflow-y-auto divide-y divide-gray-200 dark:divide-gray-700"
+          role="listbox"
+          aria-label={title}
+        >
+          {movies.map((m) => renderRow(m))}
+        </ul>
+      )}
+    </div>
+  );
+}
+
 export default function MovieRate() {
   const navigate = useNavigate();
   const { user } = useAuth();
   const { theme, displayName, headerColor } = useTheme();
   const { showToast } = useToast();
-  const { movies, ratings, initialLoading, refreshing, refresh } = useMoviesData();
+  const { movies, ratings, myRatedIds, initialLoading, refreshing, refresh } = useMoviesData();
   const [searchParams] = useSearchParams();
   const paramMovieId = searchParams.get('pelicula') || '';
 
@@ -39,13 +84,23 @@ export default function MovieRate() {
     });
   }, [movies, paramMovieId]);
 
-  const filteredMovies = useMemo(() => {
+  const { pendingMovies, ratedMovies } = useMemo(() => {
     const q = searchQuery.trim().toLowerCase();
     const base = q
       ? movies.filter((m) => m.title.toLowerCase().includes(q))
       : [...movies];
-    return base.sort(sortByTitle);
-  }, [movies, searchQuery]);
+    const pending: Movie[] = [];
+    const rated: Movie[] = [];
+    for (const m of base) {
+      if (myRatedIds.has(m.id)) rated.push(m);
+      else pending.push(m);
+    }
+    pending.sort(sortByTitle);
+    rated.sort(sortByTitle);
+    return { pendingMovies: pending, ratedMovies: rated };
+  }, [movies, searchQuery, myRatedIds]);
+
+  const hasAnyMatch = pendingMovies.length > 0 || ratedMovies.length > 0;
 
   useEffect(() => {
     if (!user || !movieId) {
@@ -98,6 +153,51 @@ export default function MovieRate() {
   const input = 'border-line bg-surface-2 text-ink rounded-control';
 
   const listRowInactive = 'text-ink hover:bg-surface-2/80 border-line';
+
+  const renderMovieRow = (m: Movie) => {
+    const active = m.id === movieId;
+    const myScore = myRatedIds.has(m.id)
+      ? ratings.find((r) => r.movieId === m.id && r.userId === user?.uid)?.score
+      : undefined;
+    return (
+      <li key={m.id}>
+        <button
+          type="button"
+          role="option"
+          aria-selected={active}
+          onClick={() => setMovieId(m.id)}
+          className={`w-full text-left px-3 py-3 sm:py-2.5 text-sm transition-colors border-l-4 ${
+            active ? '' : `${listRowInactive} border-l-transparent`
+          }`}
+          style={
+            active
+              ? {
+                  backgroundColor: hexToRgba(headerColor, theme === 'dark' ? 0.28 : 0.12),
+                  borderLeftColor: headerColor,
+                  borderLeftWidth: 4,
+                  boxShadow: `inset 0 0 0 1px ${hexToRgba(headerColor, 0.28)}`,
+                }
+              : undefined
+          }
+        >
+          <span className="font-medium">{m.title}</span>
+          {m.year != null && !Number.isNaN(m.year) && (
+            <span className={`ml-2 tabular-nums ${theme === 'dark' ? 'text-gray-400' : 'text-gray-500'}`}>
+              ({m.year})
+            </span>
+          )}
+          {myScore != null && (
+            <span
+              className="ml-2 tabular-nums font-semibold"
+              style={{ color: scoreToDisplayColor(myScore, theme) }}
+            >
+              · {formatScoreDisplay(myScore)}
+            </span>
+          )}
+        </button>
+      </li>
+    );
+  };
 
   if (initialLoading) {
     return (
@@ -159,55 +259,32 @@ export default function MovieRate() {
             />
           </div>
 
-          <div
-            className={`max-h-52 sm:max-h-64 overflow-y-auto rounded-lg border ${
-              theme === 'dark' ? 'border-gray-600 bg-gray-900/40' : 'border-gray-200 bg-gray-50/80'
-            }`}
-            role="listbox"
-            aria-label="Resultados de búsqueda"
-          >
-            {filteredMovies.length === 0 ? (
-              <p className={`px-3 py-4 text-sm text-center ${theme === 'dark' ? 'text-gray-500' : 'text-gray-500'}`}>
-                No hay coincidencias por título. Probá otra búsqueda o borrá el texto.
-              </p>
-            ) : (
-              <ul className="divide-y divide-gray-200 dark:divide-gray-700">
-                {filteredMovies.map((m) => {
-                  const active = m.id === movieId;
-                  return (
-                    <li key={m.id}>
-                      <button
-                        type="button"
-                        role="option"
-                        aria-selected={active}
-                        onClick={() => setMovieId(m.id)}
-                        className={`w-full text-left px-3 py-3 sm:py-2.5 text-sm transition-colors border-l-4 ${
-                          active ? '' : `${listRowInactive} border-l-transparent`
-                        }`}
-                        style={
-                          active
-                            ? {
-                                backgroundColor: hexToRgba(headerColor, theme === 'dark' ? 0.28 : 0.12),
-                                borderLeftColor: headerColor,
-                                borderLeftWidth: 4,
-                                boxShadow: `inset 0 0 0 1px ${hexToRgba(headerColor, 0.28)}`,
-                              }
-                            : undefined
-                        }
-                      >
-                        <span className="font-medium">{m.title}</span>
-                        {m.year != null && !Number.isNaN(m.year) && (
-                          <span className={`ml-2 tabular-nums ${theme === 'dark' ? 'text-gray-400' : 'text-gray-500'}`}>
-                            ({m.year})
-                          </span>
-                        )}
-                      </button>
-                    </li>
-                  );
-                })}
-              </ul>
-            )}
-          </div>
+          {!hasAnyMatch ? (
+            <p
+              className={`rounded-lg border px-3 py-4 text-sm text-center ${
+                theme === 'dark' ? 'border-gray-600 text-gray-500' : 'border-gray-200 text-gray-500'
+              }`}
+            >
+              No hay coincidencias por título. Probá otra búsqueda o borrá el texto.
+            </p>
+          ) : (
+            <div className="space-y-3">
+              <MoviePickSection
+                title={`Por puntuar (${pendingMovies.length})`}
+                emptyText="No te queda nada por puntuar."
+                movies={pendingMovies}
+                renderRow={renderMovieRow}
+                theme={theme}
+              />
+              <MoviePickSection
+                title={`Ya puntuadas (${ratedMovies.length})`}
+                emptyText="Todavía no puntuaste ningún título."
+                movies={ratedMovies}
+                renderRow={renderMovieRow}
+                theme={theme}
+              />
+            </div>
+          )}
 
           {selected ? (
             <p className={`text-xs ${theme === 'dark' ? 'text-gray-500' : 'text-gray-500'}`}>
@@ -217,6 +294,7 @@ export default function MovieRate() {
               </span>
               {' · '}
               Añadida por {selected.createdByName.trim() || 'Sin nombre'}
+              {myRatedIds.has(selected.id) ? ' · ya la puntuaste (podés editar)' : ''}
             </p>
           ) : (
             <p className={`text-xs ${theme === 'dark' ? 'text-amber-200/80' : 'text-amber-800'}`}>
